@@ -1,0 +1,44 @@
+<!--
+<header>
+  <div class="logo-container">
+    <h4 class="logo-label">Chat application</h4>
+  </div>
+  <nav>
+    <ul class="nav-links">
+    </ul>
+  </nav>
+</header>
+<div class="container">
+  <div class="chatBox text-center mt-3">
+    <div class="inBox">
+      <div class="msg-scroll ">
+        <div *ngFor="let msg of history" >
+          <div class="messageBox text-break" >
+            <span><b>{{msg.sender}}</b></span>
+            <p>
+              {{msg.message}}
+            </p>
+            <span class="time_date"> {{msg.date | date:'medium'}} </span>
+          </div>
+        </div>
+        <div *ngFor="let msg of messages">
+          <div class="messageBox text-break">
+            <span><b>{{msg.sender}}</b></span>
+            <p>
+              {{msg.message}}
+            </p>
+            <span class="time-date"> {{msg.date | date:'medium'}} </span>
+          </div>
+        </div>
+      </div>
+      <div class="type-msg">
+        <div class="input-msg-write ">
+          <input type="text" [value]="txtMessage"
+                 (input)="txtMessage=$event.target.value" (keydown.enter)="sendMessage()" placeholder="Type a message" />
+          <button class="msg-send-btn mr-4" type="button"  (click)="sendMessage()"><i class="fa fa-paper-plane-o" aria-hidden="true">Send</i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+-->
