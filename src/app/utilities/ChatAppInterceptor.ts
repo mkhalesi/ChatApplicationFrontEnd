@@ -14,7 +14,6 @@ export class ChatAppInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token = this.cookieService.get(ChatAppCookieName);
-
     const myRequest = req.clone({
       url: ApiDomainAddress + req.url,
       headers: req.headers

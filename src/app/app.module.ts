@@ -11,6 +11,8 @@ import {RouterModule} from "@angular/router";
 import {ToastrModule} from "ngx-toastr";
 import {AppRoutingModule} from "./app-routing.module";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {AuthService} from "./services/auth.service";
+import {UserService} from "./services/user.service";
 
 @NgModule({
   declarations: [
@@ -30,6 +32,8 @@ import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
     }),
   ],
   providers: [
+    AuthService,
+    UserService,
     {
       provide: HTTP_INTERCEPTORS,
       useClass: ChatAppInterceptor,

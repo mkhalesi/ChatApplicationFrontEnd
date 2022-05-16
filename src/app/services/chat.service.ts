@@ -2,6 +2,10 @@ import {EventEmitter, Injectable} from "@angular/core";
 import {MessageDTO} from "../DTOs/chat/MessageDTO";
 import {HubConnection, HubConnectionBuilder, LogLevel} from "@microsoft/signalr";
 import {ApiDomainAddress, ChatMethodName, invokeSendMessageName} from "../utilities/PathTools";
+import {observableToBeFn} from "rxjs/internal/testing/TestScheduler";
+import {Observable} from "rxjs";
+import {IResponseResult} from "../DTOs/Common/IResponseResult";
+import {HttpClient} from "@angular/common/http";
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +16,12 @@ export class ChatService {
   // @ts-ignore
   private _hubConnection: HubConnection;
 
-  constructor() {
+  constructor(
+    private http: HttpClient
+  ) {
+    this.createConnection();
+    this.registerOnServerEvents();
+    this.startConnection();
   }
 
   private createConnection() {
@@ -45,8 +54,13 @@ export class ChatService {
       .catch(err => console.log(err));
   }
 
-  stopSignalR(): void {
-    this._hubConnection.stop();
+  getHistoryOfMessages(chatId: number): Observable<IResponseResult<MessageDTO[]>> {
+    return this.http.get<IResponseResult<MessageDTO[]>>(`/api/chat/HistoryMessages/${chatId}`)
   }
+
+  stopSignalR(): void {
+    this._hubConnection.stop().then(r => console.log());
+  }
+
 }
 

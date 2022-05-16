@@ -3,11 +3,13 @@ import {MessageType} from "./MessageType";
 
 export class MessageDTO {
   constructor(
-    public senderId: string,
-    public receiverId: string,
+    public senderId: number,
+    public receiverId: number,
+    public senderFullName: string,
     public message: string,
     public receiverType: ReceiverType,
-    public messageType: MessageType
+    public messageType: MessageType,
+    public createdAt: string,
   ) {
   }
 }

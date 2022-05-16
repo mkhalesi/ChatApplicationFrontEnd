@@ -13,17 +13,17 @@
                      formControlName="email"
                      class="form-control">
               <p class="text-error"
-                 *ngIf="loginForm.controls.password.errors?.required && loginForm.controls.password.touched">
-                Please Enter your password
+                 *ngIf="loginForm.controls.email.errors?.required && loginForm.controls.email.touched">
+                Please Enter your email
               </p>
               <p class="text-error"
-                 *ngIf="loginForm.controls.password.errors?.minlength && loginForm.controls.password.touched">
-                Please Enter valid password
+                 *ngIf="loginForm.controls.email.errors?.minlength && loginForm.controls.email.touched">
+                Please Enter valid email
               </p>
             </div>
             <div class="form-group mt-2">
               <label for="password" class="text-info">Password:</label><br>
-              <input type="text" name="password" id="password"
+              <input type="password" name="password" id="password"
                      formControlName="password"
                      class="form-control">
               <p class="text-error"
