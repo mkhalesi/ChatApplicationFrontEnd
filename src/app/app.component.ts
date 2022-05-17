@@ -1,6 +1,9 @@
 import {Component, OnInit} from '@angular/core';
 import {CurrentUser} from "./DTOs/User/CurrentUser";
 import {AuthService} from "./services/auth.service";
+import {Router} from "@angular/router";
+import {CookieService} from "ngx-cookie-service";
+import {ChatAppCookieName} from "./utilities/PathTools";
 
 @Component({
   selector: 'app-root',
@@ -11,7 +14,9 @@ export class AppComponent implements OnInit {
   title = 'ChatAppSignalRFrontEnd';
 
   constructor(
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router,
+    private cookieService: CookieService
   ) {
   }
 
@@ -27,6 +32,9 @@ export class AppComponent implements OnInit {
         );
         this.authService.setCurrentUser(user);
       }
+    }, error => {
+      this.cookieService.delete(ChatAppCookieName);
+      this.router.navigate(['/login']);
     })
   }
 

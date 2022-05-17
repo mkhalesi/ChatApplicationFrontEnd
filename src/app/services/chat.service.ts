@@ -1,11 +1,12 @@
 import {EventEmitter, Injectable} from "@angular/core";
 import {MessageDTO} from "../DTOs/chat/MessageDTO";
-import {HubConnection, HubConnectionBuilder, LogLevel} from "@microsoft/signalr";
-import {ApiDomainAddress, ChatMethodName, invokeSendMessageName} from "../utilities/PathTools";
+import {HubConnection, HubConnectionBuilder, IHttpConnectionOptions, LogLevel} from "@microsoft/signalr";
+import {ApiDomainAddress, ChatAppCookieName, ChatMethodName, invokeSendMessageName} from "../utilities/PathTools";
 import {observableToBeFn} from "rxjs/internal/testing/TestScheduler";
 import {Observable} from "rxjs";
 import {IResponseResult} from "../DTOs/Common/IResponseResult";
 import {HttpClient} from "@angular/common/http";
+import {CookieService} from "ngx-cookie-service";
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +18,8 @@ export class ChatService {
   private _hubConnection: HubConnection;
 
   constructor(
-    private http: HttpClient
+    private http: HttpClient,
+    private cookieService: CookieService
   ) {
     this.createConnection();
     this.registerOnServerEvents();
@@ -25,8 +27,15 @@ export class ChatService {
   }
 
   private createConnection() {
+    const tokenFromCookie = this.cookieService.get(ChatAppCookieName);
+    const options: IHttpConnectionOptions = {
+      accessTokenFactory(): string | Promise<string> {
+        return tokenFromCookie;
+      }
+    };
+
     this._hubConnection = new HubConnectionBuilder()
-      .withUrl(ApiDomainAddress + '/chat')
+      .withUrl(ApiDomainAddress + '/chat', options)
       .withAutomaticReconnect()
       .configureLogging(LogLevel.Information)
       .build();
