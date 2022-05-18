@@ -48,19 +48,21 @@ export class ChatService {
         console.log('Hub Connection started');
       })
       .catch(error => {
-        console.log('Error while establishing connection, retying... ');
+        console.warn('Error while establishing connection, retying... ' + error);
       });
   }
 
   registerOnServerEvents(): void {
     this._hubConnection.on(ChatMethodName, (data) => {
+      console.log(data);
       this.messageReceived.emit(data);
     });
   }
 
   sendMessage(message: MessageDTO) {
+    console.log(message);
     this._hubConnection.invoke(invokeSendMessageName, message)
-      .catch(err => console.log(err));
+      .catch(err => console.error(err));
   }
 
   getHistoryOfMessages(chatId: number): Observable<IResponseResult<MessageDTO[]>> {
