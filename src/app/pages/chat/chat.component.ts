@@ -6,6 +6,9 @@ import {AuthService} from "../../services/auth.service";
 import {takeUntil} from "rxjs/operators";
 import {Subject} from "rxjs";
 import {CurrentUser} from "../../DTOs/User/CurrentUser";
+import {ChatDTO} from "../../DTOs/chat/ChatDTO";
+
+declare function chatScriptFunction(): any;
 
 @Component({
   selector: 'app-chat',
@@ -16,9 +19,11 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   currentUser: CurrentUser | null = null;
   txtMessage = "";
+  activeChat: ChatDTO | null = null;
   messages: MessageDTO[] = [];
   message: MessageDTO | null = null;
   history: MessageDTO[] = [];
+  selectedChatId = 0;
   private destroyed: Subject<void> = new Subject<void>();
 
   constructor(
@@ -30,6 +35,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    chatScriptFunction();
+
     this.authService.getCurrentUser().subscribe(res => {
         console.log(res);
 
@@ -42,7 +49,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.chatService.getHistoryOfMessages(1).pipe(takeUntil(this.destroyed))
           .subscribe(result => {
             if (result.success) {
-              this.history = result.data
+              this.history = result.data;
             }
           }, error => console.log(error));
       }
@@ -59,7 +66,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   sendToMessage(): void {
     if (this.txtMessage && this.currentUser) {
-      this.message = new MessageDTO(0, 0, '', '', 0, 0, '');
+      this.message = new MessageDTO(0, 0, 0, 0, false, '', '', '', 0, 0);
       /*this.message.receiverId = this.currentUser.id;*/
       this.message.message = this.txtMessage;
       this.chatService.sendMessage(this.message);
@@ -71,11 +78,14 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.txtMessage = event.target.value;
   }
 
+  selectChat(selectedChatId: number): void {
+    this.selectedChatId = selectedChatId;
+  }
+
   ngOnDestroy(): void {
     this.destroyed?.next();
     this.destroyed?.complete();
     this.chatService.stopSignalR();
   }
-
 
 }

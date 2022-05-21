@@ -1,3 +1,4 @@
+<!--
 <header>
   <div class="logo-container">
     <h4 class="logo-label">Chat application</h4>
@@ -7,26 +8,31 @@
     </ul>
   </nav>
 </header>
-<div class="container">
+<div class="container" *ngIf="currentUser">
   <div class="chatBox text-center mt-3">
+    <div *ngIf="activeChat">
+      <span>{{activeChat.receiverFullName}}</span>
+    </div>
     <div class="inBox">
-      <div class="msg-scroll ">
+      <div class="msg-scroll">
         <div *ngFor="let msg of history">
-          <div class="messageBox text-break">
-            <span><b>{{msg.senderFullName}}</b></span>
-            <p>
-              {{msg.message}}
-            </p>
-            <span class="time_date"> {{msg.createdAt | date:'medium'}} </span>
+          <div class="messageBox messageBoxSender "
+               *ngIf="currentUser.id == msg.senderId">
+            <div class="d-flex flex-column ">
+              <span class="messageBody"> {{msg.message}} </span>
+              <span class="time_date"> {{msg.createdAt | date:'medium'}} </span>
+            </div>
           </div>
         </div>
-        <div *ngFor="let msg of messages">
-          <div class="messageBox text-break">
-            <span><b>{{msg.senderFullName}}</b></span>
-            <p>
-              {{msg.message}}
-            </p>
-            <span class="time-date"> {{msg.createdAt | date:'medium'}} </span>
+        <div *ngFor="let msg of history">
+          <div class="messageBox messageBoxReceiver text-break"
+               *ngIf="currentUser.id != msg.senderId">
+            <div class="d-flex flex-column ">
+              <span class="messageBody">
+                {{msg.message}}
+              </span>
+              <span class="time-date"> {{msg.createdAt | date:'medium'}} </span>
+            </div>
           </div>
         </div>
       </div>
@@ -41,6 +47,101 @@
               Send
             </i>
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+-->
+
+<div class="wrapper" *ngIf="currentUser">
+  <div class="container-fluid main">
+    <div class="row my-3">
+      <div class="col-12 col-md-3 left">
+        <div class="top">
+          <input type="text" placeholder="Search"/>
+          <!--         <a href="javascript:;" class="search"></a>-->
+        </div>
+        <ul class="people">
+          <li class="person" data-chat="person1"
+              [ngClass]="selectedChatId == 1 ? 'active': ''"
+              (click)="selectChat(1)">
+            <img src="https://khedmatonline.ir/assets/images/home-page/comment_icon.png" alt=""/>
+            <span class="name">Thomas Bangalter</span>
+            <span class="time">2:09 PM</span>
+            <span class="preview">I was wondering...</span>
+          </li>
+          <li class="person" data-chat="person2"
+              [ngClass]="selectedChatId == 2 ? 'active': ''"
+              (click)="selectChat(2)">
+            <img src="https://khedmatonline.ir/assets/images/home-page/comment_icon.png" alt=""/>
+            <span class="name">Thomas Bangalter</span>
+            <span class="time">2:09 PM</span>
+            <span class="preview">I was wondering...</span>
+          </li>
+        </ul>
+      </div>
+      <div class="col-12 col-md-9 right pe-5" *ngIf="selectedChatId == 1">
+        <div class="top"><span>To: <span class="name">Dog Woofson</span></span></div>
+        <div *ngIf="history && history.length > 0" class="h-100">
+          <div class="chat h-100 my-2" data-chat="person1">
+            <div class="conversation-start">
+              <span>{{history[0].createdAt}}</span>
+            </div>
+            <div *ngFor="let msg of history"
+                 [ngClass]="msg.senderId == currentUser.id ? 'bubble you' : 'bubble me'">
+              {{msg.message}}
+            </div>
+            <div class="bubble you">
+              it's me.
+            </div>
+            <div class="bubble me">
+              ... about who we used to be.
+            </div>
+            <div class="bubble me">
+              Are you serious?
+            </div>
+            <div class="bubble you">
+              I was wondering...
+            </div>
+            <div class="bubble me">
+              ... about who we used to be.
+            </div>
+            <div class="bubble me">
+              Are you serious?
+            </div>
+            <div class="bubble you">
+              I was wondering...
+            </div>
+            <div class="bubble me">
+              ... about who we used to be.
+            </div>
+            <div class="bubble me">
+              Are you serious?
+            </div>
+            <div class="bubble you">
+              I was wondering...
+            </div>
+            <div class="bubble me">
+              ... about who we used to be.
+            </div>
+            <div class="bubble me">
+              Are you serious?
+            </div>
+            <div class="bubble you">
+              I was wondering...
+            </div>
+          </div>
+          <div class="d-flex flex-row mt-2">
+            <!--<a href="javascript:;" class="write-link attach"></a>-->
+            <input class="form-control" type="text"
+                   [value]="txtMessage"
+                   (change)="textMessageChange($event)"
+                   (keydown.enter)="sendToMessage()"/>
+            <a class="ms-2 btn btn-primary" (click)="sendToMessage()">Send</a>
+            <!--<a href="javascript:;" class="write-link smiley"></a>
+            <a href="javascript:;" class="write-link send"></a>-->
+          </div>
         </div>
       </div>
     </div>
