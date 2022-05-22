@@ -2,8 +2,7 @@ import {EventEmitter, Injectable} from "@angular/core";
 import {MessageDTO} from "../DTOs/chat/MessageDTO";
 import {HubConnection, HubConnectionBuilder, IHttpConnectionOptions, LogLevel} from "@microsoft/signalr";
 import {ApiDomainAddress, ChatAppCookieName, ChatMethodName, invokeSendMessageName} from "../utilities/PathTools";
-import {observableToBeFn} from "rxjs/internal/testing/TestScheduler";
-import {Observable} from "rxjs";
+import {Observable, Subject} from "rxjs";
 import {IResponseResult} from "../DTOs/Common/IResponseResult";
 import {HttpClient} from "@angular/common/http";
 import {CookieService} from "ngx-cookie-service";
@@ -12,7 +11,7 @@ import {CookieService} from "ngx-cookie-service";
   providedIn: 'root'
 })
 export class ChatService {
-  messageReceived = new EventEmitter<MessageDTO>();
+  messageReceived = new Subject<MessageDTO>();
   connectionEstablished = new EventEmitter<Boolean>();
   // @ts-ignore
   private _hubConnection: HubConnection;
@@ -52,10 +51,10 @@ export class ChatService {
       });
   }
 
-  registerOnServerEvents(): void {
+  private registerOnServerEvents(): void {
     this._hubConnection.on(ChatMethodName, (data) => {
       console.log(data);
-      this.messageReceived.emit(data);
+      this.messageReceived.next(data);
     });
   }
 

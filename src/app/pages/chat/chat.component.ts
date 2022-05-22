@@ -4,7 +4,7 @@ import {Router} from "@angular/router";
 import {ChatService} from "../../services/chat.service";
 import {AuthService} from "../../services/auth.service";
 import {takeUntil} from "rxjs/operators";
-import {Subject} from "rxjs";
+import {Subject, Subscription} from "rxjs";
 import {CurrentUser} from "../../DTOs/User/CurrentUser";
 import {ChatDTO} from "../../DTOs/chat/ChatDTO";
 
@@ -24,6 +24,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   message: MessageDTO | null = null;
   history: MessageDTO[] = [];
   selectedChatId = 0;
+  messageReceiveSubscription: Subscription = new Subscription();
   private destroyed: Subject<void> = new Subject<void>();
 
   constructor(
@@ -36,10 +37,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     chatScriptFunction();
-
     this.authService.getCurrentUser().subscribe(res => {
-        console.log(res);
-
         this.authService.isAuthenticated().then(auth => {
           if (!auth)
             this.router.navigate(['/login']);
@@ -50,6 +48,9 @@ export class ChatComponent implements OnInit, OnDestroy {
           .subscribe(result => {
             if (result.success) {
               this.history = result.data;
+              if (this.history && this.history.length > 0) {
+                this.history.forEach(item => this.messages.push(item))
+              }
             }
           }, error => console.log(error));
       }
@@ -57,11 +58,16 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   private subscribeToEvents(): void {
-    this.chatService.messageReceived.subscribe((message: MessageDTO) => {
-      this.ngZone.run(() => {
-        this.messages.push(message);
-      })
-    })
+    console.warn('called');
+    this.messageReceiveSubscription = this.chatService.messageReceived
+      .subscribe((message: MessageDTO) => {
+      console.warn('called');
+      if (message) {
+        this.ngZone.run(() => {
+          this.messages.push(message);
+        });
+      }
+    });
   }
 
   sendToMessage(): void {
@@ -83,6 +89,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.messageReceiveSubscription?.unsubscribe();
     this.destroyed?.next();
     this.destroyed?.complete();
     this.chatService.stopSignalR();
