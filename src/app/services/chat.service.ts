@@ -6,6 +6,7 @@ import {Observable, Subject} from "rxjs";
 import {IResponseResult} from "../DTOs/Common/IResponseResult";
 import {HttpClient} from "@angular/common/http";
 import {CookieService} from "ngx-cookie-service";
+import {ChatDTO} from "../DTOs/chat/ChatDTO";
 
 @Injectable({
   providedIn: 'root'
@@ -66,6 +67,14 @@ export class ChatService {
 
   getHistoryOfMessages(chatId: number): Observable<IResponseResult<MessageDTO[]>> {
     return this.http.get<IResponseResult<MessageDTO[]>>(`/api/chat/HistoryMessages/${chatId}`)
+  }
+
+  getALlUserChats(): Observable<IResponseResult<ChatDTO[]>> {
+    return this.http.get<IResponseResult<ChatDTO[]>>('/api/chat/getAllUserChats');
+  }
+
+  getUserChatByChatId(chatId: number): Observable<IResponseResult<ChatDTO>> {
+    return this.http.get<IResponseResult<ChatDTO>>(`/api/chat/getUserChatByChatId/${chatId}`);
   }
 
   stopSignalR(): void {

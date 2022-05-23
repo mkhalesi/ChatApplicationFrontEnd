@@ -23,7 +23,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   messages: MessageDTO[] = [];
   message: MessageDTO | null = null;
   history: MessageDTO[] = [];
-  selectedChatId = 0;
+  allUserChats: ChatDTO[] = [];
+  selectedChat: ChatDTO | null = null;
   messageReceiveSubscription: Subscription = new Subscription();
   private destroyed: Subject<void> = new Subject<void>();
 
@@ -44,15 +45,13 @@ export class ChatComponent implements OnInit, OnDestroy {
         })
         this.currentUser = res;
         this.subscribeToEvents();
-        this.chatService.getHistoryOfMessages(1).pipe(takeUntil(this.destroyed))
-          .subscribe(result => {
-            if (result.success) {
-              this.history = result.data;
-              if (this.history && this.history.length > 0) {
-                this.history.forEach(item => this.messages.push(item))
-              }
-            }
-          }, error => console.log(error));
+
+        this.chatService.getALlUserChats().subscribe(chatsRes => {
+          if (chatsRes.success && chatsRes.data && chatsRes.data.length > 0) {
+            this.allUserChats = chatsRes.data;
+          }
+        });
+
       }
     )
   }
@@ -61,13 +60,13 @@ export class ChatComponent implements OnInit, OnDestroy {
     console.warn('called');
     this.messageReceiveSubscription = this.chatService.messageReceived
       .subscribe((message: MessageDTO) => {
-      console.warn('called');
-      if (message) {
-        this.ngZone.run(() => {
-          this.messages.push(message);
-        });
-      }
-    });
+        console.warn('called');
+        if (message) {
+          this.ngZone.run(() => {
+            this.messages.push(message);
+          });
+        }
+      });
   }
 
   sendToMessage(): void {
@@ -85,7 +84,22 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   selectChat(selectedChatId: number): void {
-    this.selectedChatId = selectedChatId;
+    this.chatService.getUserChatByChatId(selectedChatId).subscribe(res => {
+        if (res.success && res.data) {
+          this.selectedChat = res.data;
+
+          this.chatService.getHistoryOfMessages(selectedChatId).pipe(takeUntil(this.destroyed))
+            .subscribe(result => {
+              if (result.success) {
+                this.history = result.data;
+                if (this.history && this.history.length > 0) {
+                  this.history.forEach(item => this.messages.push(item))
+                }
+              }
+            }, error => console.log(error));
+        }
+      }
+    )
   }
 
   ngOnDestroy(): void {

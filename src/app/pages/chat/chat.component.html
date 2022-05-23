@@ -62,33 +62,34 @@
           <input type="text" placeholder="Search"/>
           <!--         <a href="javascript:;" class="search"></a>-->
         </div>
-        <ul class="people">
+        <ul class="people" *ngIf="allUserChats && allUserChats.length">
           <li class="person" data-chat="person1"
-              [ngClass]="selectedChatId == 1 ? 'active': ''"
-              (click)="selectChat(1)">
-            <img src="https://khedmatonline.ir/assets/images/home-page/comment_icon.png" alt=""/>
-            <span class="name">Thomas Bangalter</span>
-            <span class="time">2:09 PM</span>
-            <span class="preview">I was wondering...</span>
-          </li>
-          <li class="person" data-chat="person2"
-              [ngClass]="selectedChatId == 2 ? 'active': ''"
-              (click)="selectChat(2)">
-            <img src="https://khedmatonline.ir/assets/images/home-page/comment_icon.png" alt=""/>
-            <span class="name">Thomas Bangalter</span>
-            <span class="time">2:09 PM</span>
-            <span class="preview">I was wondering...</span>
+              *ngFor="let userChat of allUserChats"
+              [ngClass]="selectedChat?.chatId == 1 ? 'active': ''"
+              (click)="selectChat(userChat.chatId)">
+            <img src="/assets/img/user/userProfile.png" alt=""/>
+            <span class="name">{{userChat.receiverFirstName + ' ' + userChat.receiverLastName}}</span>
+            <span class="time">{{userChat.lastUpdatedChatDate}}</span>
+            <span class="preview">
+              {{userChat.latestMessageText.substr(0, 14)}}
+            </span>
           </li>
         </ul>
       </div>
-      <div class="col-12 col-md-9 right pe-5" *ngIf="selectedChatId == 1">
-        <div class="top"><span>To: <span class="name">Dog Woofson</span></span></div>
+      <div class="col-12 col-md-9 right pe-5" *ngIf="selectedChat && selectedChat?.chatId === 1">
+        <div class="top">
+            <span>To:
+              <span class="name">
+                   {{selectedChat.receiverFirstName + ' ' + selectedChat.receiverLastName}}
+               </span>
+            </span>
+        </div>
         <div class="h-100">
           <div class="chat h-100 my-2"
                *ngIf="messages && messages.length > 0"
                data-chat="person1">
             <div class="conversation-start">
-              <span>{{messages[0].createdAt}}</span>
+              <span>{{selectedChat.startedChatDate}}</span>
             </div>
             <div *ngFor="let msg of messages"
                  [ngClass]="msg.senderId == currentUser.id ? 'bubble me' : 'bubble you'">
