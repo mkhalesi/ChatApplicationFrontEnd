@@ -1,8 +1,8 @@
 export class ChatDTO {
   constructor(
     public chatId: number,
-    public user1: number,
-    public user2: number,
+    public senderId: number,
+    public receiverId: number,
     public receiverFirstName: string,
     public receiverLastName: string,
     public startedChatDate: string,
