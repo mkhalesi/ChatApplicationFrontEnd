@@ -13,6 +13,9 @@ import {AppRoutingModule} from "./app-routing.module";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {AuthService} from "./services/auth.service";
 import {UserService} from "./services/user.service";
+import {MatMenuModule} from "@angular/material/menu";
+import {MatButtonModule} from "@angular/material/button";
+import {MatIconModule} from "@angular/material/icon";
 
 @NgModule({
   declarations: [
@@ -30,6 +33,9 @@ import {UserService} from "./services/user.service";
     ToastrModule.forRoot({
       progressBar: true
     }),
+    MatMenuModule,
+    MatButtonModule,
+    MatIconModule,
   ],
   providers: [
     AuthService,

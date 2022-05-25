@@ -26,6 +26,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   history: MessageDTO[] = [];
   allUserChats: ChatDTO[] = [];
   selectedChat: ChatDTO | null = null;
+  selectedChatId = 0;
   messageReceiveSubscription: Subscription = new Subscription();
   private destroyed: Subject<void> = new Subject<void>();
 
@@ -92,10 +93,11 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.chatService.getUserChatByChatId(selectedChatId).subscribe(res => {
         if (res.success && res.data) {
           this.selectedChat = res.data;
-
+          this.selectedChatId = selectedChatId;
           this.chatService.getHistoryOfMessages(selectedChatId).pipe(takeUntil(this.destroyed))
             .subscribe(result => {
               if (result.success) {
+                this.messages = [];
                 this.history = result.data;
                 if (this.history && this.history.length > 0) {
                   this.history.forEach(item => this.messages.push(item))
