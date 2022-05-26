@@ -7,6 +7,7 @@ import {takeUntil} from "rxjs/operators";
 import {Subject, Subscription} from "rxjs";
 import {CurrentUser} from "../../DTOs/User/CurrentUser";
 import {ChatDTO} from "../../DTOs/chat/ChatDTO";
+import {FilterMessageDTO} from "../../DTOs/chat/FilterMessageDTO";
 
 declare function chatScriptFunction(): any;
 
@@ -19,14 +20,15 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('endOfUserChat') private userChatListContainer: ElementRef | undefined;
 
   currentUser: CurrentUser | null = null;
-  txtMessage = "";
-  activeChat: ChatDTO | null = null;
+  filterMessages: FilterMessageDTO = new FilterMessageDTO(0, []);
   messages: MessageDTO[] = [];
   message: MessageDTO | null = null;
-  history: MessageDTO[] = [];
+  pages: number[] = [];
+  pageId = 1;
   allUserChats: ChatDTO[] = [];
   selectedChat: ChatDTO | null = null;
   selectedChatId = 0;
+  txtMessage = "";
   messageReceiveSubscription: Subscription = new Subscription();
   private destroyed: Subject<void> = new Subject<void>();
 
@@ -90,23 +92,40 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   selectChat(selectedChatId: number): void {
-    this.chatService.getUserChatByChatId(selectedChatId).subscribe(res => {
-        if (res.success && res.data) {
-          this.selectedChat = res.data;
+    this.chatService.getUserChatByChatId(selectedChatId).subscribe(chatRes => {
+        if (chatRes.success && chatRes.data) {
+          this.selectedChat = chatRes.data;
           this.selectedChatId = selectedChatId;
-          this.chatService.getHistoryOfMessages(selectedChatId).pipe(takeUntil(this.destroyed))
-            .subscribe(result => {
-              if (result.success) {
-                this.messages = [];
-                this.history = result.data;
-                if (this.history && this.history.length > 0) {
-                  this.history.forEach(item => this.messages.push(item))
-                }
-              }
-            }, error => console.log(error));
+          this.filterMessages.chatId = selectedChatId;
+          this.messages = [];
+          this.pageId = 1;
+          this.getUserHistoryMessages();
         }
       }
     )
+  }
+
+  getUserHistoryMessages() {
+    if (this.filterMessages.pageId <= this.filterMessages.endPage || this.filterMessages.pageId === 1) {
+      this.pages = [];
+      this.chatService.getHistoryOfMessages(this.filterMessages).pipe(takeUntil(this.destroyed))
+        .subscribe(result => {
+          if (result.success) {
+            this.filterMessages.pageId = this.pageId;
+            this.filterMessages = result.data;
+            this.messages.push(...result.data.messages);
+            for (let i = this.filterMessages.startPage; i <= this.filterMessages.endPage; i++) {
+              this.pages.push(i);
+            }
+          }
+        }, error => console.log(error));
+    }
+  }
+
+  loadData() {
+    console.log('called');
+    this.filterMessages.pageId += 1;
+    this.getUserHistoryMessages();
   }
 
   scrollToBottom(): void {

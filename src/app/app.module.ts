@@ -16,6 +16,7 @@ import {UserService} from "./services/user.service";
 import {MatMenuModule} from "@angular/material/menu";
 import {MatButtonModule} from "@angular/material/button";
 import {MatIconModule} from "@angular/material/icon";
+import {InfiniteScrollModule} from "ngx-infinite-scroll";
 
 @NgModule({
   declarations: [
@@ -36,6 +37,7 @@ import {MatIconModule} from "@angular/material/icon";
     MatMenuModule,
     MatButtonModule,
     MatIconModule,
+    InfiniteScrollModule
   ],
   providers: [
     AuthService,

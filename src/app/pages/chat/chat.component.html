@@ -88,7 +88,14 @@
         <div class="h-100">
           <div class="chat h-100 my-2" #endOfUserChat
                *ngIf="messages && messages.length > 0"
-               data-chat="person1">
+               data-chat="person1"
+               infiniteScroll
+               style="height: 100%;overflow-y: scroll;"
+               [infiniteScrollDistance]="1"
+               [infiniteScrollUpDistance]="2"
+               [infiniteScrollThrottle]="150"
+               (scrolledUp)="loadData()"
+               (scrolled)="loadData()">
             <div class="conversation-start">
               <span>{{selectedChat.startedChatDate}}</span>
             </div>
@@ -105,7 +112,8 @@
               <span class="text-end message-create-time">{{msg.createdAt}}</span>
             </div>
           </div>
-          <div *ngIf="!messages || messages.length === 0" class="d-flex flex-column justify-content-center" style="height: 100%">
+          <div *ngIf="!messages || messages.length === 0" class="d-flex flex-column justify-content-center"
+               style="height: 100%">
             <div class="text-center">
               Started Chat with
               {{selectedChat?.receiverFirstName + ' ' + selectedChat?.receiverLastName}}

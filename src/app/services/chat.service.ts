@@ -4,9 +4,10 @@ import {HubConnection, HubConnectionBuilder, IHttpConnectionOptions, LogLevel} f
 import {ApiDomainAddress, ChatAppCookieName, ChatMethodName, invokeSendMessageName} from "../utilities/PathTools";
 import {Observable, Subject} from "rxjs";
 import {IResponseResult} from "../DTOs/Common/IResponseResult";
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpParams} from "@angular/common/http";
 import {CookieService} from "ngx-cookie-service";
 import {ChatDTO} from "../DTOs/chat/ChatDTO";
+import {FilterMessageDTO} from "../DTOs/chat/FilterMessageDTO";
 
 @Injectable({
   providedIn: 'root'
@@ -54,19 +55,23 @@ export class ChatService {
 
   private registerOnServerEvents(): void {
     this._hubConnection.on(ChatMethodName, (data) => {
-      console.log(data);
       this.messageReceived.next(data);
     });
   }
 
   sendMessage(message: MessageDTO) {
-    console.log(message);
     this._hubConnection.invoke(invokeSendMessageName, message)
       .catch(err => console.error(err));
   }
 
-  getHistoryOfMessages(chatId: number): Observable<IResponseResult<MessageDTO[]>> {
-    return this.http.get<IResponseResult<MessageDTO[]>>(`/api/chat/HistoryMessages/${chatId}`)
+  getHistoryOfMessages(filter: FilterMessageDTO): Observable<IResponseResult<FilterMessageDTO>> {
+    let params;
+    if (filter)
+      params = new HttpParams()
+        .set('chatId', filter.chatId.toString())
+        .set('pageId', filter.pageId.toString())
+        .set('takeEntity', filter.takeEntity.toString());
+    return this.http.get<IResponseResult<FilterMessageDTO>>(`/api/chat/HistoryMessages`, {params});
   }
 
   getALlUserChats(): Observable<IResponseResult<ChatDTO[]>> {
