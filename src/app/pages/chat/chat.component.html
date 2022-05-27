@@ -90,15 +90,17 @@
                *ngIf="messages && messages.length > 0"
                data-chat="person1"
                infiniteScroll
-               style="height: 100%;overflow-y: scroll;"
+               style="height: 100%"
+               [scrollWindow]="false"
                [infiniteScrollDistance]="1"
                [infiniteScrollUpDistance]="2"
                [infiniteScrollThrottle]="150"
-               (scrolledUp)="loadData()"
-               (scrolled)="loadData()">
-            <div class="conversation-start">
+               (scrolledUp)="loadData()">
+            <div class="conversation-start" *ngIf="!chatMessageLoading">
               <span>{{selectedChat.startedChatDate}}</span>
             </div>
+            <mat-spinner *ngIf="chatMessageLoading"
+                         class="chat-messages-spinner-loading"></mat-spinner>
             <div class="d-flex flex-column" *ngFor="let msg of messages"
                  [ngClass]="msg.senderId == currentUser.id ? 'bubble me' : 'bubble you'">
               <!--<div class="text-end">

@@ -1,13 +1,33 @@
-
-
 // regular style toast | Toaster
 @import '~ngx-toastr/toastr';
 
 
-.text-error{
+.text-error {
   color: red;
   font-size: 12px;
 }
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html, body {
+
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+.chat-messages-spinner-loading {
+  width: 50px !important;
+  margin: 0 auto !important;
+  height: 50px !important;
+
+  svg {
+    width: 50px !important;
+    height: 50px !important;
+  }
+
+  circle {
+    stroke: #00b0ff;
+    stroke-width: 3% !important;
+  }
+}

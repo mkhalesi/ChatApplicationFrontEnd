@@ -17,6 +17,7 @@ import {MatMenuModule} from "@angular/material/menu";
 import {MatButtonModule} from "@angular/material/button";
 import {MatIconModule} from "@angular/material/icon";
 import {InfiniteScrollModule} from "ngx-infinite-scroll";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 
 @NgModule({
   declarations: [
@@ -37,7 +38,8 @@ import {InfiniteScrollModule} from "ngx-infinite-scroll";
     MatMenuModule,
     MatButtonModule,
     MatIconModule,
-    InfiniteScrollModule
+    InfiniteScrollModule,
+    MatProgressSpinnerModule
   ],
   providers: [
     AuthService,

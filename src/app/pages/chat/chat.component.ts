@@ -1,4 +1,13 @@
-import {AfterViewChecked, Component, ElementRef, NgZone, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {
+  AfterViewChecked,
+  AfterViewInit,
+  Component,
+  ElementRef,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  ViewChild
+} from '@angular/core';
 import {MessageDTO} from "../../DTOs/chat/MessageDTO";
 import {Router} from "@angular/router";
 import {ChatService} from "../../services/chat.service";
@@ -16,9 +25,10 @@ declare function chatScriptFunction(): any;
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']
 })
-export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
+export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, AfterViewInit {
   @ViewChild('endOfUserChat') private userChatListContainer: ElementRef | undefined;
 
+  chatMessageLoading = false;
   currentUser: CurrentUser | null = null;
   filterMessages: FilterMessageDTO = new FilterMessageDTO(0, []);
   messages: MessageDTO[] = [];
@@ -30,6 +40,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   selectedChatId = 0;
   txtMessage = "";
   messageReceiveSubscription: Subscription = new Subscription();
+  scrollToBottomChatMessages = true;
   private destroyed: Subject<void> = new Subject<void>();
 
   constructor(
@@ -41,6 +52,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
   }
 
   ngOnInit(): void {
+    this.filterMessages.takeEntity = 15;
     chatScriptFunction();
     this.authService.getCurrentUser().subscribe(res => {
         this.authService.isAuthenticated().then(auth => {
@@ -54,9 +66,12 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.chatService.getALlUserChats().subscribe(chatsRes => {
       if (chatsRes.success && chatsRes.data && chatsRes.data.length > 0) {
         this.allUserChats = chatsRes.data;
-        this.scrollToBottom();
       }
     });
+  }
+
+  ngAfterViewInit(): void {
+    this.scrollToBottom();
   }
 
   ngAfterViewChecked() {
@@ -83,6 +98,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.message.message = this.txtMessage;
       this.chatService.sendMessage(this.message);
       this.txtMessage = '';
+      this.scrollToBottomChatMessages = true;
       this.scrollToBottom();
     }
   }
@@ -96,41 +112,61 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked {
         if (chatRes.success && chatRes.data) {
           this.selectedChat = chatRes.data;
           this.selectedChatId = selectedChatId;
-          this.filterMessages.chatId = selectedChatId;
+          this.filterMessages = new FilterMessageDTO(this.selectedChatId, []);
           this.messages = [];
-          this.pageId = 1;
-          this.getUserHistoryMessages();
+          this.filterMessages.chatId = selectedChatId;
+          this.scrollToBottomChatMessages = true;
+          this.getUserHistoryMessages().then(() => {
+          });
         }
       }
     )
   }
 
-  getUserHistoryMessages() {
-    if (this.filterMessages.pageId <= this.filterMessages.endPage || this.filterMessages.pageId === 1) {
-      this.pages = [];
-      this.chatService.getHistoryOfMessages(this.filterMessages).pipe(takeUntil(this.destroyed))
-        .subscribe(result => {
-          if (result.success) {
-            this.filterMessages.pageId = this.pageId;
-            this.filterMessages = result.data;
-            this.messages.push(...result.data.messages);
-            for (let i = this.filterMessages.startPage; i <= this.filterMessages.endPage; i++) {
-              this.pages.push(i);
+  getUserHistoryMessages(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.filterMessages.pageId <= this.filterMessages.endPage || this.filterMessages.pageId === 1) {
+        this.pages = [];
+        this.chatService.getHistoryOfMessages(this.filterMessages).pipe(takeUntil(this.destroyed))
+          .subscribe(result => {
+            if (result.success) {
+              this.filterMessages.pageId = this.pageId;
+              this.filterMessages = result.data;
+              if (this.messages && this.messages.length > 0) {
+                this.messages.reverse();
+                this.messages.push(...result.data.messages);
+                this.messages.reverse();
+              } else {
+                this.messages.push(...result.data.messages);
+              }
+              for (let i = this.filterMessages.startPage; i <= this.filterMessages.endPage; i++) {
+                this.pages.push(i);
+              }
+              resolve();
             }
-          }
-        }, error => console.log(error));
-    }
+          }, error => console.log(error));
+      }
+    })
   }
 
   loadData() {
-    console.log('called');
+    this.chatMessageLoading = true;
     this.filterMessages.pageId += 1;
-    this.getUserHistoryMessages();
+    this.scrollToBottomChatMessages = false;
+    this.getUserHistoryMessages().then(() => {
+      this.chatMessageLoading = false;
+    });
   }
 
   scrollToBottom(): void {
-    // @ts-ignore
-    this.userChatListContainer?.nativeElement.scrollTop = this.userChatListContainer?.nativeElement.scrollHeight
+    try {
+      const scrollHeight = this.userChatListContainer?.nativeElement.scrollHeight - 30;
+      if (this.userChatListContainer?.nativeElement.scrollTop === 0 || this.scrollToBottomChatMessages) {
+        // @ts-ignore
+        this.userChatListContainer?.nativeElement.scrollTop = scrollHeight;
+      }
+    } catch (err) {
+    }
   }
 
   ngOnDestroy(): void {

@@ -8,11 +8,12 @@ export class FilterMessageDTO implements BasePaging {
   ) {
   }
 
-  activePage: number = 0;
-  endPage: number = 0;
+  pageId: number = 1;
+  activePage: number = 1;
+  takeEntity: number = 15;
+  startPage: number = 1;
+  endPage: number = 1;
   pageCount: number = 0;
   skipEntity: number = 0;
-  startPage: number = 0;
-  takeEntity: number = 100;
-  pageId: number = 1;
+
 }
