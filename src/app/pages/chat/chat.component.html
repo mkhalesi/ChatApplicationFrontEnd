@@ -99,7 +99,7 @@
             <div class="conversation-start" *ngIf="!chatMessageLoading">
               <span>{{selectedChat.startedChatDate}}</span>
             </div>
-            <mat-spinner *ngIf="chatMessageLoading"
+            <mat-spinner *ngIf="chatMessageLoading && filterMessages.pageId < filterMessages.endPage"
                          class="chat-messages-spinner-loading"></mat-spinner>
             <div class="d-flex flex-column" *ngFor="let msg of messages"
                  [ngClass]="msg.senderId == currentUser.id ? 'bubble me' : 'bubble you'">
