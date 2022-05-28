@@ -17,6 +17,7 @@ import {Subject, Subscription} from "rxjs";
 import {CurrentUser} from "../../DTOs/User/CurrentUser";
 import {ChatDTO} from "../../DTOs/chat/ChatDTO";
 import {FilterMessageDTO} from "../../DTOs/chat/FilterMessageDTO";
+import {FormControl, FormGroup, Validators} from "@angular/forms";
 
 declare function chatScriptFunction(): any;
 
@@ -38,7 +39,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
   allUserChats: ChatDTO[] = [];
   selectedChat: ChatDTO | null = null;
   selectedChatId = 0;
-  txtMessage = "";
+  messageForm: FormGroup | null = null;
   messageReceiveSubscription: Subscription = new Subscription();
   scrollToBottomChatMessages = true;
   private destroyed: Subject<void> = new Subject<void>();
@@ -54,6 +55,11 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
   ngOnInit(): void {
     this.filterMessages.takeEntity = 15;
     chatScriptFunction();
+    this.messageForm = new FormGroup({
+      message: new FormControl(null, [
+        Validators.required,
+      ])
+    })
     this.authService.getCurrentUser().subscribe(res => {
         this.authService.isAuthenticated().then(auth => {
           if (!auth)
@@ -91,36 +97,34 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
   }
 
   sendToMessage(): void {
-    if (this.txtMessage && this.currentUser && this.selectedChat) {
+    if (this.messageForm && this.messageForm.controls.message.value
+      && this.currentUser && this.selectedChat) {
       this.message = new MessageDTO(0, 0, 0, 0, false, '', '', '', 0, 0);
       this.message.receiverId = this.selectedChat?.receiverId;
       this.message.chatId = this.selectedChat.chatId;
-      this.message.message = this.txtMessage;
+      this.message.message = this.messageForm.controls.message.value;
       this.chatService.sendMessage(this.message);
-      this.txtMessage = '';
+      this.messageForm.reset()
       this.scrollToBottomChatMessages = true;
       this.scrollToBottom();
     }
   }
 
-  textMessageChange(event: any): void {
-    this.txtMessage = event.target.value;
-  }
-
   selectChat(selectedChatId: number): void {
-    this.chatService.getUserChatByChatId(selectedChatId).subscribe(chatRes => {
-        if (chatRes.success && chatRes.data) {
-          this.selectedChat = chatRes.data;
-          this.selectedChatId = selectedChatId;
-          this.filterMessages = new FilterMessageDTO(this.selectedChatId, []);
-          this.messages = [];
-          this.filterMessages.chatId = selectedChatId;
-          this.scrollToBottomChatMessages = true;
-          this.getUserHistoryMessages().then(() => {
-          });
+    if (selectedChatId != this.selectedChatId)
+      this.chatService.getUserChatByChatId(selectedChatId).subscribe(chatRes => {
+          if (chatRes.success && chatRes.data) {
+            this.selectedChat = chatRes.data;
+            this.selectedChatId = selectedChatId;
+            this.filterMessages = new FilterMessageDTO(this.selectedChatId, []);
+            this.messages = [];
+            this.filterMessages.chatId = selectedChatId;
+            this.scrollToBottomChatMessages = true;
+            this.getUserHistoryMessages().then(() => {
+            });
+          }
         }
-      }
-    )
+      )
   }
 
   getUserHistoryMessages(): Promise<void> {
