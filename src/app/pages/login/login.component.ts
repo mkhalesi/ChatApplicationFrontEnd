@@ -27,6 +27,11 @@ export class LoginComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.authService.getCurrentUser().subscribe(user => {
+      if (user) {
+        this.router.navigate(['/chat']);
+      }
+    })
     this.loginForm = new FormGroup({
       email: new FormControl(null, [
         Validators.required,

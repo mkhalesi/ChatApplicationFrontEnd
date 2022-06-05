@@ -46,4 +46,8 @@ export class AuthService {
     return this.http.post<IResponseResult<LoginResponseDTO>>('/api/auth/login', loginUserDTO);
   }
 
+  signOutUser(): Observable<IResponseResult<boolean>> {
+    return this.http.get<IResponseResult<boolean>>(`/api/auth/sign-out`);
+  }
+
 }

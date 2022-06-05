@@ -58,9 +58,25 @@
   <div class="container-fluid main">
     <div class="row my-3">
       <div class="col-12 col-md-3 left">
-        <div class="top">
-          <input type="text" placeholder="Search"/>
-          <!--         <a href="javascript:;" class="search"></a>-->
+        <div class="top d-flex flex-row justify-content-between">
+          <div class="ms-2 text-end justify-content-center d-flex flex-column">
+            <div class="me-3 text-end justify-content-center d-flex flex-column">
+              <mat-icon [matMenuTriggerFor]="profileMenu">account_circle</mat-icon>
+            </div>
+            <mat-menu #profileMenu="matMenu">
+              <button mat-menu-item>Profile</button>
+              <button mat-menu-item>Settings</button>
+              <button mat-menu-item (click)="signOutUser()">Sign Out</button>
+            </mat-menu>
+          </div>
+          <input type="text" style="width: 100%" placeholder="Search"/>
+          <div class="ms-2 text-end justify-content-center d-flex flex-column">
+            <mat-icon [matMenuTriggerFor]="createMenu">add</mat-icon>
+            <mat-menu #createMenu="matMenu">
+              <button mat-menu-item>New Chat</button>
+              <button mat-menu-item>New Group</button>
+            </mat-menu>
+          </div>
         </div>
         <ul class="people" *ngIf="allUserChats && allUserChats.length">
           <li class="person" data-chat="person1"
@@ -92,7 +108,7 @@
                infiniteScroll
                style="height: 100%"
                [scrollWindow]="false"
-               [infiniteScrollDistance]="1"
+               [infiniteScrollDistance]="2"
                [infiniteScrollUpDistance]="2"
                [infiniteScrollThrottle]="150"
                (scrolledUp)="loadData()">
@@ -114,12 +130,17 @@
               <span class="text-end message-create-time">{{msg.createdAt}}</span>
             </div>
           </div>
-          <div *ngIf="!messages || messages.length === 0" class="d-flex flex-column justify-content-center"
+          <div *ngIf="!chatLoading && (!messages || messages.length === 0)"
+               class="d-flex flex-column justify-content-center"
                style="height: 100%">
             <div class="text-center">
               Started Chat with
               {{selectedChat?.receiverFirstName + ' ' + selectedChat?.receiverLastName}}
             </div>
+          </div>
+          <div *ngIf="chatLoading" class="d-flex flex-column justify-content-center"
+               style="height: 100%">
+            <div class="text-center">Loading Chat ...</div>
           </div>
           <div class="" *ngIf="messageForm">
             <!--<a href="javascript:;" class="write-link attach"></a>-->
@@ -130,7 +151,8 @@
                        (keydown.enter)="sendToMessage()"/>
                 <button class="ms-2 btn btn-primary"
                         [disabled]="messageForm.invalid"
-                        (click)="sendToMessage()">Send
+                        (click)="sendToMessage()">
+                  <mat-icon>send</mat-icon>
                 </button>
               </div>
             </form>

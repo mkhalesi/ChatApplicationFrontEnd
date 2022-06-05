@@ -18,6 +18,8 @@ import {CurrentUser} from "../../DTOs/User/CurrentUser";
 import {ChatDTO} from "../../DTOs/chat/ChatDTO";
 import {FilterMessageDTO} from "../../DTOs/chat/FilterMessageDTO";
 import {FormControl, FormGroup, Validators} from "@angular/forms";
+import {CookieService} from "ngx-cookie-service";
+import {ChatAppCookieName} from "../../utilities/PathTools";
 
 declare function chatScriptFunction(): any;
 
@@ -29,6 +31,7 @@ declare function chatScriptFunction(): any;
 export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, AfterViewInit {
   @ViewChild('endOfUserChat') private userChatListContainer: ElementRef | undefined;
 
+  chatLoading = true;
   chatMessageLoading = false;
   currentUser: CurrentUser | null = null;
   filterMessages: FilterMessageDTO = new FilterMessageDTO(0, []);
@@ -42,6 +45,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
   messageForm: FormGroup | null = null;
   messageReceiveSubscription: Subscription = new Subscription();
   scrollToBottomChatMessages = true;
+  currentScrollHeight = 0;
   private destroyed: Subject<void> = new Subject<void>();
 
   constructor(
@@ -49,6 +53,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
     private router: Router,
     private chatService: ChatService,
     private ngZone: NgZone,
+    private cookieService: CookieService,
   ) {
   }
 
@@ -111,65 +116,76 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
   }
 
   selectChat(selectedChatId: number): void {
-    if (selectedChatId != this.selectedChatId)
+    if (selectedChatId != this.selectedChatId) {
+      this.chatLoading = true;
+      this.messages = [];
+      this.filterMessages = new FilterMessageDTO(0, []);
       this.chatService.getUserChatByChatId(selectedChatId).subscribe(chatRes => {
           if (chatRes.success && chatRes.data) {
             this.selectedChat = chatRes.data;
             this.selectedChatId = selectedChatId;
             this.filterMessages = new FilterMessageDTO(this.selectedChatId, []);
-            this.messages = [];
             this.filterMessages.chatId = selectedChatId;
             this.scrollToBottomChatMessages = true;
             this.getUserHistoryMessages().then(() => {
+              this.chatLoading = false;
             });
           }
         }
       )
+    }
   }
 
-  getUserHistoryMessages(): Promise<void> {
+  async getUserHistoryMessages(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.filterMessages.pageId <= this.filterMessages.endPage || this.filterMessages.pageId === 1) {
         this.pages = [];
         this.chatService.getHistoryOfMessages(this.filterMessages).pipe(takeUntil(this.destroyed))
           .subscribe(result => {
-            if (result.success) {
-              this.filterMessages.pageId = this.pageId;
-              this.filterMessages = result.data;
-              if (this.messages && this.messages.length > 0) {
-                this.messages.reverse();
-                this.messages.push(...result.data.messages);
-                this.messages.reverse();
-              } else {
-                this.messages.push(...result.data.messages);
+            setTimeout(() => {
+              if (result.success && this.filterMessages.chatId === result.data?.chatId) {
+                this.filterMessages.pageId = this.pageId;
+                this.filterMessages = result.data;
+                this.messages.unshift(...result.data.messages);
+                for (let i = this.filterMessages.startPage; i <= this.filterMessages.endPage; i++) {
+                  this.pages.push(i);
+                }
+                resolve();
               }
-              for (let i = this.filterMessages.startPage; i <= this.filterMessages.endPage; i++) {
-                this.pages.push(i);
-              }
-              resolve();
-            }
+            }, 1000);
           }, error => console.log(error));
       }
     })
   }
 
-  loadData() {
+  async loadData() {
     this.chatMessageLoading = true;
     this.filterMessages.pageId += 1;
     this.scrollToBottomChatMessages = false;
-    this.getUserHistoryMessages().then(() => {
+    this.currentScrollHeight = this.userChatListContainer?.nativeElement.scrollHeight;
+    await this.getUserHistoryMessages().then(() => {
       this.chatMessageLoading = false;
+      // @ts-ignore
+      this.userChatListContainer?.nativeElement.scrollTop = this.currentScrollHeight / 5;
     });
   }
 
   scrollToBottom(): void {
     try {
-      const scrollHeight = this.userChatListContainer?.nativeElement.scrollHeight - 30;
-      if (this.userChatListContainer?.nativeElement.scrollTop === 0 || this.scrollToBottomChatMessages) {
+      if (!this.scrollToBottomChatMessages)
+        return;
+      if (this.scrollToBottomChatMessages) {
         // @ts-ignore
-        this.userChatListContainer?.nativeElement.scrollTop = scrollHeight;
+        this.userChatListContainer?.nativeElement.scrollTop = this.userChatListContainer?.nativeElement.scrollHeight;
       }
     } catch (err) {
+    }
+  }
+
+  signOutUser(): void {
+    if (this.currentUser) {
+      this.cookieService.delete(ChatAppCookieName);
+      this.router.navigate(['/login']);
     }
   }
 
