@@ -87,7 +87,7 @@
             <span class="name">{{userChat.receiverFirstName + ' ' + userChat.receiverLastName}}</span>
             <span class="time">{{userChat.lastUpdatedChatDate}}</span>
             <span class="preview">
-              {{userChat.latestMessageText.substr(0, 14)}}
+              {{userChat.latestMessageText?.substr(0, 14)}}
             </span>
           </li>
         </ul>
@@ -119,13 +119,13 @@
                          class="chat-messages-spinner-loading"></mat-spinner>
             <div class="d-flex flex-column" *ngFor="let msg of messages"
                  [ngClass]="msg.senderId == currentUser.id ? 'bubble me' : 'bubble you'">
-              <!--<div class="text-end">
+              <div class="text-end" style="height: 20px">
                 <mat-icon [matMenuTriggerFor]="menuMessage">expand_more</mat-icon>
                 <mat-menu #menuMessage="matMenu">
-                  <button mat-menu-item>Reply</button>
+                  <button mat-menu-item (click)="replyToMessage(msg)">Reply</button>
                   <button mat-menu-item>Select</button>
                 </mat-menu>
-              </div>-->
+              </div>
               <span>{{msg.message}}</span>
               <span class="text-end message-create-time">{{msg.createdAt}}</span>
             </div>
@@ -146,9 +146,18 @@
             <!--<a href="javascript:;" class="write-link attach"></a>-->
             <form (ngSubmit)="sendToMessage()" [formGroup]="messageForm">
               <div class="d-flex flex-row mt-2">
-                <input class="form-control" type="text"
-                       formControlName="message"
-                       (keydown.enter)="sendToMessage()"/>
+                <div class="d-flex flex-column flex-fill">
+                  <div class="card p-1 border-1 d-flex flex-row" *ngIf="replyToMessageDetail">
+                    <mat-icon (click)="replyToMessageDetail = null" style="cursor: pointer">cancel</mat-icon>
+                    <span class="ms-1">
+                      {{replyToMessageDetail.message.substr(0, 14)}}
+                      {{replyToMessageDetail.message.length > 14 ? '...' : ''}}
+                    </span>
+                  </div>
+                  <input class="form-control" type="text"
+                         formControlName="message"
+                         (keydown.enter)="sendToMessage()"/>
+                </div>
                 <button class="ms-2 btn btn-primary"
                         [disabled]="messageForm.invalid"
                         (click)="sendToMessage()">

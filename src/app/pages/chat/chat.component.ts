@@ -46,6 +46,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
   messageReceiveSubscription: Subscription = new Subscription();
   scrollToBottomChatMessages = true;
   currentScrollHeight = 0;
+  replyToMessageDetail: MessageDTO | null = null;
   private destroyed: Subject<void> = new Subject<void>();
 
   constructor(
@@ -66,19 +67,14 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
       ])
     })
     this.authService.getCurrentUser().subscribe(res => {
-        this.authService.isAuthenticated().then(auth => {
-          if (!auth)
-            this.router.navigate(['/login']);
-        })
-        this.currentUser = res;
-      }
-    )
-    this.subscribeToEvents();
-    this.chatService.getALlUserChats().subscribe(chatsRes => {
-      if (chatsRes.success && chatsRes.data && chatsRes.data.length > 0) {
-        this.allUserChats = chatsRes.data;
-      }
+      this.authService.isAuthenticated().then(auth => {
+        if (!auth)
+          this.router.navigate(['/login']);
+      })
+      this.currentUser = res;
     });
+    this.subscribeToEvents();
+    this.getUserChats();
   }
 
   ngAfterViewInit(): void {
@@ -96,9 +92,18 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
         if (message) {
           this.ngZone.run(() => {
             this.messages.push(message);
+            this.getUserChats();
           });
         }
       });
+  }
+
+  getUserChats() {
+    this.chatService.getALlUserChats().subscribe(chatsRes => {
+      if (chatsRes.success && chatsRes.data && chatsRes.data.length > 0) {
+        this.allUserChats = chatsRes.data;
+      }
+    });
   }
 
   sendToMessage(): void {
@@ -108,10 +113,12 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
       this.message.receiverId = this.selectedChat?.receiverId;
       this.message.chatId = this.selectedChat.chatId;
       this.message.message = this.messageForm.controls.message.value;
-      this.chatService.sendMessage(this.message);
-      this.messageForm.reset()
-      this.scrollToBottomChatMessages = true;
-      this.scrollToBottom();
+      this.chatService.sendMessage(this.message).then(() => {
+        this.messageForm?.reset();
+        this.replyToMessageDetail = null;
+        this.scrollToBottomChatMessages = true;
+        this.scrollToBottom();
+      });
     }
   }
 
@@ -180,6 +187,10 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
       }
     } catch (err) {
     }
+  }
+
+  replyToMessage(message: MessageDTO): void {
+    this.replyToMessageDetail = message;
   }
 
   signOutUser(): void {

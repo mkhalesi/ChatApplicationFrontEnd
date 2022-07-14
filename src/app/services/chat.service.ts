@@ -59,9 +59,12 @@ export class ChatService {
     });
   }
 
-  sendMessage(message: MessageDTO) {
-    this._hubConnection.invoke(invokeSendMessageName, message)
-      .catch(err => console.error(err));
+  sendMessage(message: MessageDTO): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this._hubConnection.invoke(invokeSendMessageName, message)
+        .catch(err => console.error(err));
+      resolve();
+    });
   }
 
   getHistoryOfMessages(filter: FilterMessageDTO): Observable<IResponseResult<FilterMessageDTO>> {
