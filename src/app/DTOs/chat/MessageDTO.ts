@@ -1,5 +1,6 @@
 import {ReceiverType} from "./ReceiverType";
 import {MessageType} from "./MessageType";
+import {ReplyToMessageDTO} from "./replyToMessageDTO";
 
 export class MessageDTO {
   constructor(
@@ -13,6 +14,8 @@ export class MessageDTO {
     public updatedAt: string,
     public receiverType: ReceiverType,
     public messageType: MessageType,
+    public replyToMessageId: number,
+    public replyToMessage: ReplyToMessageDTO,
   ) {
   }
 }

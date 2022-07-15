@@ -1,5 +1,6 @@
 export enum MessageType {
-    Message = 1,
-    Attachment,
-    Notification
+  Message = 1,
+  ReplyToMessage,
+  Attachment,
+  Notification
 }

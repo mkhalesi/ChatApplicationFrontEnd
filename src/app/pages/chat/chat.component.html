@@ -117,7 +117,7 @@
             </div>
             <mat-spinner *ngIf="chatMessageLoading && filterMessages.pageId < filterMessages.endPage"
                          class="chat-messages-spinner-loading"></mat-spinner>
-            <div class="d-flex flex-column" *ngFor="let msg of messages"
+            <div class="d-flex flex-column" *ngFor="let msg of messages" [id]="msg.chatMessageId"
                  [ngClass]="msg.senderId == currentUser.id ? 'bubble me' : 'bubble you'">
               <div class="text-end" style="height: 20px">
                 <mat-icon [matMenuTriggerFor]="menuMessage">expand_more</mat-icon>
@@ -125,6 +125,12 @@
                   <button mat-menu-item (click)="replyToMessage(msg)">Reply</button>
                   <button mat-menu-item>Select</button>
                 </mat-menu>
+              </div>
+              <div *ngIf="msg.replyToMessage" class="d-flex flex-column reply-to-message p-1">
+                <span class="reply-fullname">{{msg.replyToMessage.replyToFullName}}</span>
+                <span class="reply-message">
+                  {{msg.replyToMessage.message.substr(0, 14)}}
+                  {{msg.replyToMessage.message.length > 14 ? '...' : ''}}</span>
               </div>
               <span>{{msg.message}}</span>
               <span class="text-end message-create-time">{{msg.createdAt}}</span>
@@ -154,7 +160,7 @@
                       {{replyToMessageDetail.message.length > 14 ? '...' : ''}}
                     </span>
                   </div>
-                  <input class="form-control" type="text"
+                  <input class="form-control message-input" type="text"
                          formControlName="message"
                          (keydown.enter)="sendToMessage()"/>
                 </div>

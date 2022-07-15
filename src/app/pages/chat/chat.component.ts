@@ -20,6 +20,8 @@ import {FilterMessageDTO} from "../../DTOs/chat/FilterMessageDTO";
 import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {CookieService} from "ngx-cookie-service";
 import {ChatAppCookieName} from "../../utilities/PathTools";
+import {MessageType} from "../../DTOs/chat/MessageType";
+import {ReplyToMessageDTO} from "../../DTOs/chat/replyToMessageDTO";
 
 declare function chatScriptFunction(): any;
 
@@ -108,17 +110,27 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
 
   sendToMessage(): void {
     if (this.messageForm && this.messageForm.controls.message.value
-      && this.currentUser && this.selectedChat) {
-      this.message = new MessageDTO(0, 0, 0, 0, false, '', '', '', 0, 0);
-      this.message.receiverId = this.selectedChat?.receiverId;
-      this.message.chatId = this.selectedChat.chatId;
-      this.message.message = this.messageForm.controls.message.value;
-      this.chatService.sendMessage(this.message).then(() => {
-        this.messageForm?.reset();
-        this.replyToMessageDetail = null;
-        this.scrollToBottomChatMessages = true;
-        this.scrollToBottom();
-      });
+      && this.currentUser) {
+      if (this.selectedChat) {
+        this.message = new MessageDTO(0, 0, 0, 0,
+          false, '', '', '', 0,
+          0, 0, new ReplyToMessageDTO(0, '', ''));
+        this.message.receiverId = this.selectedChat?.receiverId;
+        this.message.chatId = this.selectedChat.chatId;
+        this.message.message = this.messageForm.controls.message.value;
+        if (this.replyToMessageDetail) {
+          this.message.messageType = MessageType.ReplyToMessage;
+          this.message.replyToMessageId = this.replyToMessageDetail.chatMessageId;
+        } else {
+          this.message.messageType = MessageType.Message;
+        }
+        this.chatService.sendMessage(this.message).then(() => {
+          this.messageForm?.reset();
+          this.replyToMessageDetail = null;
+          this.scrollToBottomChatMessages = true;
+          this.scrollToBottom();
+        });
+      }
     }
   }
 
@@ -149,17 +161,15 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
         this.pages = [];
         this.chatService.getHistoryOfMessages(this.filterMessages).pipe(takeUntil(this.destroyed))
           .subscribe(result => {
-            setTimeout(() => {
-              if (result.success && this.filterMessages.chatId === result.data?.chatId) {
-                this.filterMessages.pageId = this.pageId;
-                this.filterMessages = result.data;
-                this.messages.unshift(...result.data.messages);
-                for (let i = this.filterMessages.startPage; i <= this.filterMessages.endPage; i++) {
-                  this.pages.push(i);
-                }
-                resolve();
+            if (result.success && this.filterMessages.chatId === result.data?.chatId) {
+              this.filterMessages.pageId = this.pageId;
+              this.filterMessages = result.data;
+              this.messages.unshift(...result.data.messages);
+              for (let i = this.filterMessages.startPage; i <= this.filterMessages.endPage; i++) {
+                this.pages.push(i);
               }
-            }, 1000);
+              resolve();
+            }
           }, error => console.log(error));
       }
     })
