@@ -57,6 +57,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
     private chatService: ChatService,
     private ngZone: NgZone,
     private cookieService: CookieService,
+    private elRef: ElementRef
   ) {
   }
 
@@ -114,7 +115,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
       if (this.selectedChat) {
         this.message = new MessageDTO(0, 0, 0, 0,
           false, '', '', '', 0,
-          0, 0, new ReplyToMessageDTO(0, '', ''));
+          0, 0, new ReplyToMessageDTO(0, '', '', 0));
         this.message.receiverId = this.selectedChat?.receiverId;
         this.message.chatId = this.selectedChat.chatId;
         this.message.message = this.messageForm.controls.message.value;
@@ -201,6 +202,20 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
 
   replyToMessage(message: MessageDTO): void {
     this.replyToMessageDetail = message;
+    this.elRef.nativeElement.querySelector('.message-input').focus();
+  }
+
+  scrollToRepliedMessage(replyToMessageId: number) {
+    const repliedElement = this.elRef.nativeElement.querySelector(`#msg${replyToMessageId}`);
+    if (repliedElement) {
+      repliedElement.scrollIntoView({behavior: 'smooth'})
+      repliedElement.style.opacity = '0.8'
+      repliedElement.style.boxShadow = '3px 3px 10px #ccc'
+      setTimeout(() => {
+        repliedElement.style.opacity = '1';
+        repliedElement.style.boxShadow = 'unset'
+      } , 500)
+    }
   }
 
   signOutUser(): void {
@@ -216,5 +231,4 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
     this.destroyed?.complete();
     this.chatService.stopSignalR();
   }
-
 }

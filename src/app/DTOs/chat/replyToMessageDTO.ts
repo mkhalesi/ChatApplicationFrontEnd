@@ -3,6 +3,7 @@ export class ReplyToMessageDTO {
     public replyToMessageId: number,
     public replyToFullName: string,
     public message: string,
+    public replyToUserId: number,
   ) {
   }
 }
