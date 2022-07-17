@@ -8,6 +8,7 @@ export class ChatDTO {
     public startedChatDate: string,
     public lastUpdatedChatDate: string,
     public latestMessageText: string,
+    public unreadMessagesCount: number,
   ) {
   }
 }

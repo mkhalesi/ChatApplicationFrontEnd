@@ -94,8 +94,19 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
       .subscribe((message: MessageDTO) => {
         if (message) {
           this.ngZone.run(() => {
-            this.messages.push(message);
-            this.getUserChats();
+            if (this.selectedChatId == message.chatId) {
+              this.messages.push(message);
+              this.chatService.callSeenMessages(this.selectedChatId).subscribe(readMsgRes => {
+                if (readMsgRes.data) {
+                  this.messages.filter(p => !p.readMessage).forEach(msg => {
+                    msg.readMessage = true;
+                  });
+                  this.getUserChats();
+                }
+              });
+            } else {
+              this.getUserChats();
+            }
           });
         }
       });
@@ -115,7 +126,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
       if (this.selectedChat) {
         this.message = new MessageDTO(0, 0, 0, 0,
           false, '', '', '', 0,
-          0, 0, new ReplyToMessageDTO(0, '', '', 0));
+          0, 0, new ReplyToMessageDTO(0, '', '', 0), false);
         this.message.receiverId = this.selectedChat?.receiverId;
         this.message.chatId = this.selectedChat.chatId;
         this.message.message = this.messageForm.controls.message.value;
@@ -148,6 +159,14 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
             this.filterMessages.chatId = selectedChatId;
             this.scrollToBottomChatMessages = true;
             this.getUserHistoryMessages().then(() => {
+              this.chatService.callSeenMessages(this.selectedChatId).subscribe(readMsgRes => {
+                if (readMsgRes.data) {
+                  this.messages.filter(p => !p.readMessage).forEach(msg => {
+                    msg.readMessage = true;
+                  });
+                  this.getUserChats();
+                }
+              });
               this.chatLoading = false;
             });
           }
@@ -214,7 +233,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
       setTimeout(() => {
         repliedElement.style.opacity = '1';
         repliedElement.style.boxShadow = 'unset'
-      } , 500)
+      }, 500)
     }
   }
 

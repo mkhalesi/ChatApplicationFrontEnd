@@ -16,6 +16,7 @@ export class MessageDTO {
     public messageType: MessageType,
     public replyToMessageId: number,
     public replyToMessage: ReplyToMessageDTO,
+    public readMessage: boolean,
   ) {
   }
 }

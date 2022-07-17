@@ -79,16 +79,25 @@
           </div>
         </div>
         <ul class="people" *ngIf="allUserChats && allUserChats.length">
-          <li class="person" data-chat="person1"
+          <li class="person d-flex flex-row" data-chat="person1"
               *ngFor="let userChat of allUserChats"
               [ngClass]="userChat.chatId == selectedChat?.chatId ? 'active': ''"
               (click)="selectChat(userChat.chatId)">
-            <img src="/assets/img/user/userProfile.png" alt=""/>
-            <span class="name">{{userChat.receiverFirstName + ' ' + userChat.receiverLastName}}</span>
-            <span class="time">{{userChat.lastUpdatedChatDate}}</span>
-            <span class="preview">
+            <div class="d-flex flex-row">
+              <img src="/assets/img/user/userProfile.png" alt=""/>
+              <div class="d-flex flex-column">
+                <span class="name">{{userChat.receiverFirstName + ' ' + userChat.receiverLastName}}</span>
+                <span class="preview">
               {{userChat.latestMessageText?.substr(0, 14)}}
             </span>
+              </div>
+            </div>
+            <div class="">
+              <span class="time">{{userChat.lastUpdatedChatDate}}</span>
+              <span *ngIf="userChat.unreadMessagesCount > 0"
+                    [matBadge]="userChat.unreadMessagesCount" matBadgeOverlap="false" matBadgeColor="warn">
+             </span>
+            </div>
           </li>
         </ul>
       </div>
@@ -140,7 +149,14 @@
                     {{msg.replyToMessage.message.length > 14 ? '...' : ''}}</span>
                 </div>
                 <span>{{msg.message}}</span>
-                <span class="text-end message-create-time">{{msg.createdAt}}</span>
+                <div class="d-flex flex-row">
+                  <span class="text-end message-create-time me-1">{{msg.createdAt}}</span>
+                  <mat-icon *ngIf="msg.senderId == currentUser.id && !msg.readMessage" style="font-size: 16px">check
+                  </mat-icon>
+                  <mat-icon *ngIf="msg.senderId == currentUser.id && msg.readMessage" style="font-size: 16px">
+                    done_all
+                  </mat-icon>
+                </div>
               </div>
             </div>
           </div>

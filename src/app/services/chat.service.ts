@@ -85,6 +85,10 @@ export class ChatService {
     return this.http.get<IResponseResult<ChatDTO>>(`/api/chat/getUserChatByChatId/${chatId}`);
   }
 
+  callSeenMessages(chatId: number): Observable<IResponseResult<boolean>> {
+    return this.http.get<IResponseResult<boolean>>(`/api/chat/SeenMessages/${chatId}`);
+  }
+
   stopSignalR(): void {
     this._hubConnection.stop().then(r => console.log());
   }
