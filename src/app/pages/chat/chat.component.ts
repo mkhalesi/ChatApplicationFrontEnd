@@ -50,6 +50,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
   currentScrollHeight = 0;
   replyToMessageDetail: MessageDTO | null = null;
   private destroyed: Subject<void> = new Subject<void>();
+  receiverSeenMessages: Subject<boolean> = new Subject<boolean>();
 
   constructor(
     private authService: AuthService,
@@ -94,16 +95,29 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
       .subscribe((message: MessageDTO) => {
         if (message) {
           this.ngZone.run(() => {
-            if (this.selectedChatId == message.chatId) {
-              this.messages.push(message);
-              this.chatService.callSeenMessages(this.selectedChatId).subscribe(readMsgRes => {
-                if (readMsgRes.data) {
-                  this.messages.filter(p => !p.readMessage).forEach(msg => {
-                    msg.readMessage = true;
+            this.messages.push(message);
+            if (this.selectedChatId === message.chatId) {
+              if (message.receiverId == this.currentUser?.id) {
+                this.chatService.callSeenMessages(this.selectedChatId).subscribe(readMsgRes => {
+                  console.log('receiverId: ' + readMsgRes.data);
+                  if (readMsgRes.data) {
+                    this.getUserChats();
+                  }
+                });
+              } else if (message.senderId == this.currentUser?.id) {
+                this.chatService.callSeenMessages(this.selectedChatId).subscribe(res => {
+                  this.chatService.receiverSeenAllMessages(this.selectedChatId).subscribe(readMsgRes => {
+                    console.log('senderId: ' + readMsgRes.data);
+                    if (readMsgRes.data) {
+                      this.messages.filter(p => !p.readMessage).forEach(msg => {
+                        msg.readMessage = true;
+                      });
+                      this.getUserChats();
+                    }
                   });
-                  this.getUserChats();
-                }
-              });
+                });
+              }
+
             } else {
               this.getUserChats();
             }
