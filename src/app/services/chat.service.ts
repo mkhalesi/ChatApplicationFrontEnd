@@ -1,7 +1,13 @@
 import {EventEmitter, Injectable} from "@angular/core";
 import {MessageDTO} from "../DTOs/chat/MessageDTO";
 import {HubConnection, HubConnectionBuilder, IHttpConnectionOptions, LogLevel} from "@microsoft/signalr";
-import {ApiDomainAddress, ChatAppCookieName, ChatMethodName, invokeSendMessageName} from "../utilities/PathTools";
+import {
+  ApiDomainAddress,
+  ChatAppCookieName,
+  ChatMethodName,
+  invokeReceiverSeenMessage,
+  invokeSendMessageName, UpdateSenderMessagesReadTime
+} from "../utilities/PathTools";
 import {Observable, Subject} from "rxjs";
 import {IResponseResult} from "../DTOs/Common/IResponseResult";
 import {HttpClient, HttpParams} from "@angular/common/http";
@@ -14,6 +20,7 @@ import {FilterMessageDTO} from "../DTOs/chat/FilterMessageDTO";
 })
 export class ChatService {
   messageReceived = new Subject<MessageDTO>();
+  senderMessagesReadTimeUpdated = new Subject<boolean>();
   connectionEstablished = new EventEmitter<Boolean>();
   // @ts-ignore
   private _hubConnection: HubConnection;
@@ -57,6 +64,9 @@ export class ChatService {
     this._hubConnection.on(ChatMethodName, (data) => {
       this.messageReceived.next(data);
     });
+    this._hubConnection.on(UpdateSenderMessagesReadTime, (data) => {
+      this.senderMessagesReadTimeUpdated.next(data);
+    });
   }
 
   sendMessage(message: MessageDTO): Promise<void> {
@@ -91,6 +101,14 @@ export class ChatService {
 
   receiverSeenAllMessages(chatId: number): Observable<IResponseResult<boolean>> {
     return this.http.get<IResponseResult<boolean>>(`/api/chat/ReceiverSeenAllMessages/${chatId}`);
+  }
+
+  receiverSeenMessages(chatId: number): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this._hubConnection.invoke(invokeReceiverSeenMessage, chatId)
+        .catch(err => console.error(err));
+      resolve();
+    });
   }
 
   stopSignalR(): void {

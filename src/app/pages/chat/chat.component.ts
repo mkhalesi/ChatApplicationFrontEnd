@@ -50,7 +50,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
   currentScrollHeight = 0;
   replyToMessageDetail: MessageDTO | null = null;
   private destroyed: Subject<void> = new Subject<void>();
-  receiverSeenMessages: Subject<boolean> = new Subject<boolean>();
+  senderMessagesReadTimeUpdateSubscription: Subscription = new Subscription();
 
   constructor(
     private authService: AuthService,
@@ -99,7 +99,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
             if (this.selectedChatId === message.chatId) {
               if (message.receiverId == this.currentUser?.id) {
                 this.chatService.callSeenMessages(this.selectedChatId).subscribe(readMsgRes => {
-                  console.log('receiverId: ' + readMsgRes.data);
                   if (readMsgRes.data) {
                     this.getUserChats();
                   }
@@ -107,7 +106,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
               } else if (message.senderId == this.currentUser?.id) {
                 this.chatService.callSeenMessages(this.selectedChatId).subscribe(res => {
                   this.chatService.receiverSeenAllMessages(this.selectedChatId).subscribe(readMsgRes => {
-                    console.log('senderId: ' + readMsgRes.data);
                     if (readMsgRes.data) {
                       this.messages.filter(p => !p.readMessage).forEach(msg => {
                         msg.readMessage = true;
@@ -117,10 +115,24 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
                   });
                 });
               }
-
             } else {
               this.getUserChats();
+              if (message.receiverId === this.currentUser?.id) {
+                this.requestPermissionForNotification(message);
+              }
             }
+          });
+        }
+      });
+
+    this.senderMessagesReadTimeUpdateSubscription = this.chatService.senderMessagesReadTimeUpdated
+      .pipe(takeUntil(this.destroyed))
+      .subscribe((updated: boolean) => {
+        if (updated) {
+          this.ngZone.run(() => {
+            this.messages.filter(p => !p.readMessage).forEach(msg => {
+              msg.readMessage = true;
+            });
           });
         }
       });
@@ -140,7 +152,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
       if (this.selectedChat) {
         this.message = new MessageDTO(0, 0, 0, 0,
           false, '', '', '', 0,
-          0, 0, new ReplyToMessageDTO(0, '', '', 0), false);
+          0, 0, new ReplyToMessageDTO(0, '', '', 0), false, '');
         this.message.receiverId = this.selectedChat?.receiverId;
         this.message.chatId = this.selectedChat.chatId;
         this.message.message = this.messageForm.controls.message.value;
@@ -160,6 +172,29 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
     }
   }
 
+  requestPermissionForNotification(newMessage: MessageDTO) {
+    if (Notification.permission !== "granted") {
+      Notification.requestPermission().then(r => {
+        if (r === "granted") {
+          this.sendNotificationToReceiver(newMessage);
+        }
+      });
+    } else {
+      this.sendNotificationToReceiver(newMessage);
+    }
+  }
+
+  sendNotificationToReceiver(newMessage: MessageDTO | null) {
+    if (newMessage?.receiverId == this.currentUser?.id) {
+      const notification = new Notification('New Message in ChatApp', {
+        body: 'new Message from ' +  newMessage?.senderFullName,
+      });
+      notification.onclick = () => {
+        window.open("/");
+      }
+    }
+  }
+
   selectChat(selectedChatId: number): void {
     if (selectedChatId != this.selectedChatId) {
       this.chatLoading = true;
@@ -175,10 +210,9 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
             this.getUserHistoryMessages().then(() => {
               this.chatService.callSeenMessages(this.selectedChatId).subscribe(readMsgRes => {
                 if (readMsgRes.data) {
-                  this.messages.filter(p => !p.readMessage).forEach(msg => {
-                    msg.readMessage = true;
+                  this.chatService.receiverSeenMessages(this.selectedChatId).then(() => {
+                    this.getUserChats();
                   });
-                  this.getUserChats();
                 }
               });
               this.chatLoading = false;
@@ -260,6 +294,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
 
   ngOnDestroy(): void {
     this.messageReceiveSubscription?.unsubscribe();
+    this.senderMessagesReadTimeUpdateSubscription?.unsubscribe();
     this.destroyed?.next();
     this.destroyed?.complete();
     this.chatService.stopSignalR();

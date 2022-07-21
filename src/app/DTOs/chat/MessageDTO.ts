@@ -17,6 +17,7 @@ export class MessageDTO {
     public replyToMessageId: number,
     public replyToMessage: ReplyToMessageDTO,
     public readMessage: boolean,
+    public senderFullName: string
   ) {
   }
 }
