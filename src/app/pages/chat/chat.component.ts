@@ -1,11 +1,10 @@
 import {
-  AfterViewChecked,
   AfterViewInit,
   Component,
-  ElementRef,
+  ElementRef, HostListener, Inject,
   NgZone,
   OnDestroy,
-  OnInit,
+  OnInit, PLATFORM_ID,
   ViewChild
 } from '@angular/core';
 import {MessageDTO} from "../../DTOs/chat/MessageDTO";
@@ -16,12 +15,9 @@ import {takeUntil} from "rxjs/operators";
 import {Subject, Subscription} from "rxjs";
 import {CurrentUser} from "../../DTOs/User/CurrentUser";
 import {ChatDTO} from "../../DTOs/chat/ChatDTO";
-import {FilterMessageDTO} from "../../DTOs/chat/FilterMessageDTO";
-import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {CookieService} from "ngx-cookie-service";
 import {ChatAppCookieName} from "../../utilities/PathTools";
-import {MessageType} from "../../DTOs/chat/MessageType";
-import {ReplyToMessageDTO} from "../../DTOs/chat/replyToMessageDTO";
+import {isPlatformBrowser} from "@angular/common";
 
 declare function chatScriptFunction(): any;
 
@@ -30,27 +26,17 @@ declare function chatScriptFunction(): any;
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']
 })
-export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, AfterViewInit {
+export class ChatComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('endOfUserChat') private userChatListContainer: ElementRef | undefined;
 
   chatLoading = true;
-  chatMessageLoading = false;
   currentUser: CurrentUser | null = null;
-  filterMessages: FilterMessageDTO = new FilterMessageDTO(0, []);
-  messages: MessageDTO[] = [];
-  message: MessageDTO | null = null;
-  pages: number[] = [];
-  pageId = 1;
   allUserChats: ChatDTO[] = [];
-  selectedChat: ChatDTO | null = null;
   selectedChatId = 0;
-  messageForm: FormGroup | null = null;
   messageReceiveSubscription: Subscription = new Subscription();
-  scrollToBottomChatMessages = true;
-  currentScrollHeight = 0;
-  replyToMessageDetail: MessageDTO | null = null;
   private destroyed: Subject<void> = new Subject<void>();
   senderMessagesReadTimeUpdateSubscription: Subscription = new Subscription();
+  innerWidth = 0;
 
   constructor(
     private authService: AuthService,
@@ -58,18 +44,14 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
     private chatService: ChatService,
     private ngZone: NgZone,
     private cookieService: CookieService,
-    private elRef: ElementRef
+    private elRef: ElementRef,
+    @Inject(PLATFORM_ID) private platformId: any,
   ) {
   }
 
   ngOnInit(): void {
-    this.filterMessages.takeEntity = 15;
+    this.onResize();
     chatScriptFunction();
-    this.messageForm = new FormGroup({
-      message: new FormControl(null, [
-        Validators.required,
-      ])
-    })
     this.authService.getCurrentUser().subscribe(res => {
       this.authService.isAuthenticated().then(auth => {
         if (!auth)
@@ -82,59 +64,13 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
   }
 
   ngAfterViewInit(): void {
-    this.scrollToBottom();
-  }
-
-  ngAfterViewChecked() {
-    this.scrollToBottom();
   }
 
   private subscribeToEvents(): void {
     this.messageReceiveSubscription = this.chatService.messageReceived
       .pipe(takeUntil(this.destroyed))
       .subscribe((message: MessageDTO) => {
-        if (message) {
-          this.ngZone.run(() => {
-            this.messages.push(message);
-            if (this.selectedChatId === message.chatId) {
-              if (message.receiverId == this.currentUser?.id) {
-                this.chatService.callSeenMessages(this.selectedChatId).subscribe(readMsgRes => {
-                  if (readMsgRes.data) {
-                    this.getUserChats();
-                  }
-                });
-              } else if (message.senderId == this.currentUser?.id) {
-                this.chatService.callSeenMessages(this.selectedChatId).subscribe(res => {
-                  this.chatService.receiverSeenAllMessages(this.selectedChatId).subscribe(readMsgRes => {
-                    if (readMsgRes.data) {
-                      this.messages.filter(p => !p.readMessage).forEach(msg => {
-                        msg.readMessage = true;
-                      });
-                      this.getUserChats();
-                    }
-                  });
-                });
-              }
-            } else {
-              this.getUserChats();
-              if (message.receiverId === this.currentUser?.id) {
-                this.requestPermissionForNotification(message);
-              }
-            }
-          });
-        }
-      });
-
-    this.senderMessagesReadTimeUpdateSubscription = this.chatService.senderMessagesReadTimeUpdated
-      .pipe(takeUntil(this.destroyed))
-      .subscribe((updated: boolean) => {
-        if (updated) {
-          this.ngZone.run(() => {
-            this.messages.filter(p => !p.readMessage).forEach(msg => {
-              msg.readMessage = true;
-            });
-          });
-        }
+        this.getUserChats();
       });
   }
 
@@ -146,147 +82,26 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
     });
   }
 
-  sendToMessage(): void {
-    if (this.messageForm && this.messageForm.controls.message.value
-      && this.currentUser) {
-      if (this.selectedChat) {
-        this.message = new MessageDTO(0, 0, 0, 0,
-          false, '', '', '', 0,
-          0, 0, new ReplyToMessageDTO(0, '', '', 0), false, '');
-        this.message.receiverId = this.selectedChat?.receiverId;
-        this.message.chatId = this.selectedChat.chatId;
-        this.message.message = this.messageForm.controls.message.value;
-        if (this.replyToMessageDetail) {
-          this.message.messageType = MessageType.ReplyToMessage;
-          this.message.replyToMessageId = this.replyToMessageDetail.chatMessageId;
-        } else {
-          this.message.messageType = MessageType.Message;
-        }
-        this.chatService.sendMessage(this.message).then(() => {
-          this.messageForm?.reset();
-          this.replyToMessageDetail = null;
-          this.scrollToBottomChatMessages = true;
-          this.scrollToBottom();
-        });
-      }
-    }
-  }
-
-  requestPermissionForNotification(newMessage: MessageDTO) {
-    if (Notification.permission !== "granted") {
-      Notification.requestPermission().then(r => {
-        if (r === "granted") {
-          this.sendNotificationToReceiver(newMessage);
-        }
-      });
-    } else {
-      this.sendNotificationToReceiver(newMessage);
-    }
-  }
-
-  sendNotificationToReceiver(newMessage: MessageDTO | null) {
-    if (newMessage?.receiverId == this.currentUser?.id) {
-      const notification = new Notification('New Message in ChatApp', {
-        body: 'new Message from ' +  newMessage?.senderFullName,
-      });
-      notification.onclick = () => {
-        window.open("/");
-      }
-    }
+  callGetAllUserChats(event: boolean): void {
+    console.log(event);
+    if (event)
+      this.getUserChats();
   }
 
   selectChat(selectedChatId: number): void {
     if (selectedChatId != this.selectedChatId) {
       this.chatLoading = true;
-      this.messages = [];
-      this.filterMessages = new FilterMessageDTO(0, []);
-      this.chatService.getUserChatByChatId(selectedChatId).subscribe(chatRes => {
-          if (chatRes.success && chatRes.data) {
-            this.selectedChat = chatRes.data;
-            this.selectedChatId = selectedChatId;
-            this.filterMessages = new FilterMessageDTO(this.selectedChatId, []);
-            this.filterMessages.chatId = selectedChatId;
-            this.scrollToBottomChatMessages = true;
-            this.getUserHistoryMessages().then(() => {
-              this.chatService.callSeenMessages(this.selectedChatId).subscribe(readMsgRes => {
-                if (readMsgRes.data) {
-                  this.chatService.receiverSeenMessages(this.selectedChatId).then(() => {
-                    this.getUserChats();
-                  });
-                }
-              });
-              this.chatLoading = false;
-            });
-          }
-        }
-      )
-    }
-  }
-
-  async getUserHistoryMessages(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (this.filterMessages.pageId <= this.filterMessages.endPage || this.filterMessages.pageId === 1) {
-        this.pages = [];
-        this.chatService.getHistoryOfMessages(this.filterMessages).pipe(takeUntil(this.destroyed))
-          .subscribe(result => {
-            if (result.success && this.filterMessages.chatId === result.data?.chatId) {
-              this.filterMessages.pageId = this.pageId;
-              this.filterMessages = result.data;
-              this.messages.unshift(...result.data.messages);
-              for (let i = this.filterMessages.startPage; i <= this.filterMessages.endPage; i++) {
-                this.pages.push(i);
-              }
-              resolve();
-            }
-          }, error => console.log(error));
+      if (this.innerWidth > 700) {
+        this.selectedChatId = selectedChatId;
+      } else {
+        this.router.navigate(['/chat', this.selectedChatId]);
       }
-    })
-  }
-
-  async loadData() {
-    this.chatMessageLoading = true;
-    this.filterMessages.pageId += 1;
-    this.scrollToBottomChatMessages = false;
-    this.currentScrollHeight = this.userChatListContainer?.nativeElement.scrollHeight;
-    await this.getUserHistoryMessages().then(() => {
-      this.chatMessageLoading = false;
-      // @ts-ignore
-      this.userChatListContainer?.nativeElement.scrollTop = this.currentScrollHeight / 5;
-    });
-  }
-
-  scrollToBottom(): void {
-    try {
-      if (!this.scrollToBottomChatMessages)
-        return;
-      if (this.scrollToBottomChatMessages) {
-        // @ts-ignore
-        this.userChatListContainer?.nativeElement.scrollTop = this.userChatListContainer?.nativeElement.scrollHeight;
-      }
-    } catch (err) {
-    }
-  }
-
-  replyToMessage(message: MessageDTO): void {
-    this.replyToMessageDetail = message;
-    this.elRef.nativeElement.querySelector('.message-input').focus();
-  }
-
-  scrollToRepliedMessage(replyToMessageId: number) {
-    const repliedElement = this.elRef.nativeElement.querySelector(`#msg${replyToMessageId}`);
-    if (repliedElement) {
-      repliedElement.scrollIntoView({behavior: 'smooth'})
-      repliedElement.style.opacity = '0.8'
-      repliedElement.style.boxShadow = '3px 3px 10px #ccc'
-      setTimeout(() => {
-        repliedElement.style.opacity = '1';
-        repliedElement.style.boxShadow = 'unset'
-      }, 500)
     }
   }
 
   signOutUser(): void {
-    if (this.currentUser) {
+    if (this.currentUser
+    ) {
       this.cookieService.delete(ChatAppCookieName);
       this.router.navigate(['/login']);
     }
@@ -299,4 +114,15 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewChecked, After
     this.destroyed?.complete();
     this.chatService.stopSignalR();
   }
+
+  @HostListener('window:resize', ['$event'])
+  onResize(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.innerWidth = window.innerWidth;
+      if (this.innerWidth < 1000) {
+      }
+    }
+  }
+
+
 }

@@ -19,31 +19,37 @@ import {MatIconModule} from "@angular/material/icon";
 import {InfiniteScrollModule} from "ngx-infinite-scroll";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatBadgeModule} from "@angular/material/badge";
+import {ChatUserComponent} from './pages/chat/chat-user/chat-user.component';
+import {ChatUserDetailComponent} from './pages/chat/chat-user-detail/chat-user-detail.component';
+import { ChatUserPageComponent } from './pages/chat/chat-user-page/chat-user-page.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ChatComponent,
-    LoginComponent
+    LoginComponent,
+    ChatUserComponent,
+    ChatUserDetailComponent,
+    ChatUserPageComponent
   ],
-    imports: [
-        AppRoutingModule,
-        HttpClientModule,
-        BrowserModule,
-        ReactiveFormsModule,
-        BrowserAnimationsModule,
-        RouterModule,
-        ToastrModule.forRoot({
-            progressBar: true
-        }),
-        MatMenuModule,
-        MatButtonModule,
-        MatIconModule,
-        InfiniteScrollModule,
-        MatProgressSpinnerModule,
-        FormsModule,
-        MatBadgeModule
-    ],
+  imports: [
+    AppRoutingModule,
+    HttpClientModule,
+    BrowserModule,
+    ReactiveFormsModule,
+    BrowserAnimationsModule,
+    RouterModule,
+    ToastrModule.forRoot({
+      progressBar: true
+    }),
+    MatMenuModule,
+    MatButtonModule,
+    MatIconModule,
+    InfiniteScrollModule,
+    MatProgressSpinnerModule,
+    FormsModule,
+    MatBadgeModule
+  ],
   providers: [
     AuthService,
     UserService,
