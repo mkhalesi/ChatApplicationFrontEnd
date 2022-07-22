@@ -23,6 +23,7 @@ import {ReplyToMessageDTO} from "../../../DTOs/chat/replyToMessageDTO";
 import {MessageType} from "../../../DTOs/chat/MessageType";
 import {ChatAppCookieName} from "../../../utilities/PathTools";
 import {isPlatformBrowser} from "@angular/common";
+import {GlobalEventManager} from "../../../utilities/GlobalEventManager";
 
 declare function chatScriptFunction(): any;
 
@@ -64,6 +65,7 @@ export class ChatUserDetailComponent implements OnInit, OnDestroy, AfterViewInit
     private elRef: ElementRef,
     private activatedRoute: ActivatedRoute,
     @Inject(PLATFORM_ID) private platformId: any,
+    private eventManager: GlobalEventManager
   ) {
   }
 
@@ -89,6 +91,7 @@ export class ChatUserDetailComponent implements OnInit, OnDestroy, AfterViewInit
     });
     if (this.selectedChatId !== 0 && this.selectedChatId) {
       this.loadChatDetails();
+      this.eventManager.selectedChatIdEvent.next(this.selectedChatId);
     }
   }
 
@@ -135,7 +138,8 @@ export class ChatUserDetailComponent implements OnInit, OnDestroy, AfterViewInit
               this.messages.push(message);
             if (this.selectedChatId === message.chatId) {
               if (message.receiverId == this.currentUser?.id) {
-                this.chatService.callSeenMessages(this.selectedChatId).subscribe();
+                this.chatService.callSeenMessages(this.selectedChatId).subscribe(res => {
+                });
               } else if (message.senderId == this.currentUser?.id) {
                 this.chatService.callSeenMessages(this.selectedChatId).subscribe(res => {
                   this.chatService.receiverSeenAllMessages(this.selectedChatId).subscribe(readMsgRes => {
@@ -146,10 +150,6 @@ export class ChatUserDetailComponent implements OnInit, OnDestroy, AfterViewInit
                     }
                   });
                 });
-              }
-            } else {
-              if (message.receiverId === this.currentUser?.id) {
-                this.requestPermissionForNotification(message);
               }
             }
           });
@@ -191,29 +191,6 @@ export class ChatUserDetailComponent implements OnInit, OnDestroy, AfterViewInit
           this.scrollToBottomChatMessages = true;
           this.scrollToBottom();
         });
-      }
-    }
-  }
-
-  requestPermissionForNotification(newMessage: MessageDTO) {
-    if (Notification.permission !== "granted") {
-      Notification.requestPermission().then(r => {
-        if (r === "granted") {
-          this.sendNotificationToReceiver(newMessage);
-        }
-      });
-    } else {
-      this.sendNotificationToReceiver(newMessage);
-    }
-  }
-
-  sendNotificationToReceiver(newMessage: MessageDTO | null) {
-    if (newMessage?.receiverId == this.currentUser?.id) {
-      const notification = new Notification('New Message in ChatApp', {
-        body: 'new Message from ' + newMessage?.senderFullName,
-      });
-      notification.onclick = () => {
-        window.open("/");
       }
     }
   }

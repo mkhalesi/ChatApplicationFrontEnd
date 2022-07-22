@@ -1,10 +1,10 @@
 import {
   AfterViewInit,
   Component,
-  ElementRef, HostListener, Inject,
+  ElementRef, EventEmitter, HostListener, Inject,
   NgZone,
   OnDestroy,
-  OnInit, PLATFORM_ID,
+  OnInit, Output, PLATFORM_ID,
   ViewChild
 } from '@angular/core';
 import {MessageDTO} from "../../DTOs/chat/MessageDTO";
@@ -18,6 +18,7 @@ import {ChatDTO} from "../../DTOs/chat/ChatDTO";
 import {CookieService} from "ngx-cookie-service";
 import {ChatAppCookieName} from "../../utilities/PathTools";
 import {isPlatformBrowser} from "@angular/common";
+import {GlobalEventManager} from "../../utilities/GlobalEventManager";
 
 declare function chatScriptFunction(): any;
 
@@ -46,6 +47,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewInit {
     private cookieService: CookieService,
     private elRef: ElementRef,
     @Inject(PLATFORM_ID) private platformId: any,
+    private eventManager: GlobalEventManager
   ) {
   }
 
@@ -70,8 +72,14 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewInit {
     this.messageReceiveSubscription = this.chatService.messageReceived
       .pipe(takeUntil(this.destroyed))
       .subscribe((message: MessageDTO) => {
-        this.getUserChats();
+        if (this.selectedChatId !== message.chatId) {
+          this.getUserChats();
+        }
       });
+  }
+
+  callGetAllUserChats(event: boolean): void {
+    if (event) this.getUserChats();
   }
 
   getUserChats() {
@@ -82,14 +90,8 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  callGetAllUserChats(event: boolean): void {
-    console.log(event);
-    if (event)
-      this.getUserChats();
-  }
-
   selectChat(selectedChatId: number): void {
-    if (selectedChatId != this.selectedChatId) {
+    if (selectedChatId !== 0 && selectedChatId != this.selectedChatId) {
       this.chatLoading = true;
       if (this.innerWidth > 700) {
         this.selectedChatId = selectedChatId;
