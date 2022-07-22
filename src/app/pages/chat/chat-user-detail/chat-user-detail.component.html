@@ -1,6 +1,9 @@
-<div class="right pe-5"
+<div class="right"
      *ngIf="selectedChat && selectedChat?.chatId === selectedChatId && currentUser">
-  <div class="top">
+  <div class="top d-flex flex-row">
+            <div class="pe-2" *ngIf="innerWidth <= 700" [routerLink]="['/chat']">
+              <mat-icon>arrow_back</mat-icon>
+            </div>
             <span>To:
               <span class="name">
                    {{selectedChat.receiverFirstName + ' ' + selectedChat.receiverLastName}}
@@ -69,7 +72,7 @@
          style="height: 100%">
       <div class="text-center">Loading Chat ...</div>
     </div>
-    <div class="" *ngIf="messageForm">
+    <div class="message-form" *ngIf="messageForm">
       <!--<a href="javascript:;" class="write-link attach"></a>-->
       <form (ngSubmit)="sendToMessage()" [formGroup]="messageForm">
         <div class="d-flex flex-row mt-2">

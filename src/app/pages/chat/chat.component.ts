@@ -1,10 +1,10 @@
 import {
   AfterViewInit,
   Component,
-  ElementRef, EventEmitter, HostListener, Inject,
+  ElementRef, HostListener, Inject,
   NgZone,
   OnDestroy,
-  OnInit, Output, PLATFORM_ID,
+  OnInit,  PLATFORM_ID,
   ViewChild
 } from '@angular/core';
 import {MessageDTO} from "../../DTOs/chat/MessageDTO";
@@ -96,7 +96,7 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewInit {
       if (this.innerWidth > 700) {
         this.selectedChatId = selectedChatId;
       } else {
-        this.router.navigate(['/chat', this.selectedChatId]);
+        this.router.navigate(['/chat', selectedChatId]);
       }
     }
   }

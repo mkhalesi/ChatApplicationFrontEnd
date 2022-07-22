@@ -45,7 +45,7 @@
           </li>
         </ul>
       </div>
-      <div class="col-12 col-md-9 chat-user-detail-parent">
+      <div class="col-12 col-md-9 chat-user-detail-parent" *ngIf="innerWidth >= 700">
         <app-chat-user-detail *ngIf="selectedChatId !== 0"
                               (callGetAllUserChats)="callGetAllUserChats($event)"
                               [selectedChatId]="selectedChatId"></app-chat-user-detail>

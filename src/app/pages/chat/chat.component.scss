@@ -45,6 +45,7 @@ body {
   .row {
     height: 100%;
   }
+
   .chat-user-detail-parent {
     height: 100%;
   }
@@ -113,7 +114,7 @@ body {
       .person {
         position: relative;
         width: 100%;
-        padding: 12px 10% 16px;
+        padding: 12px 1px 12px;
         cursor: pointer;
         list-style: none;
         background-color: var(--white);
@@ -188,6 +189,12 @@ body {
     }
   }
 
+}
+
+@media screen and (max-width: 700px) {
+  .top {
+    padding: 30px 5px !important;
+  }
 }
 
 @keyframes slideFromLeft {
