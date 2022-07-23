@@ -40,7 +40,7 @@ body {
 
 .main {
   background-color: var(--white);
-  height: 80vh;
+  height: 90vh;
 
   .row {
     height: 100%;
@@ -114,7 +114,7 @@ body {
       .person {
         position: relative;
         width: 100%;
-        padding: 12px 1px 12px;
+        padding: 12px 5px 12px;
         cursor: pointer;
         list-style: none;
         background-color: var(--white);
@@ -168,13 +168,9 @@ body {
         }
 
         &.active, &:hover {
-          margin-top: -1px;
-          margin-left: -1px;
-          padding-top: 13px;
           border: 0;
           background-color: var(--chat-background);
           width: calc(100% + 2px);
-          padding-left: calc(10% + 1px);
 
           span {
             color: var(--white);
@@ -194,6 +190,9 @@ body {
 @media screen and (max-width: 700px) {
   .top {
     padding: 30px 5px !important;
+  }
+  .people {
+    padding: 5px 10px !important;
   }
 }
 

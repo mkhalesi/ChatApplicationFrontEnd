@@ -19,7 +19,6 @@ import {MatIconModule} from "@angular/material/icon";
 import {InfiniteScrollModule} from "ngx-infinite-scroll";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {MatBadgeModule} from "@angular/material/badge";
-import {ChatUserComponent} from './pages/chat/chat-user/chat-user.component';
 import {ChatUserDetailComponent} from './pages/chat/chat-user-detail/chat-user-detail.component';
 import { ChatUserPageComponent } from './pages/chat/chat-user-page/chat-user-page.component';
 
@@ -28,7 +27,6 @@ import { ChatUserPageComponent } from './pages/chat/chat-user-page/chat-user-pag
     AppComponent,
     ChatComponent,
     LoginComponent,
-    ChatUserComponent,
     ChatUserDetailComponent,
     ChatUserPageComponent
   ],

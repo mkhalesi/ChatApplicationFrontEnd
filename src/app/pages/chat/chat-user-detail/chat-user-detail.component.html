@@ -1,21 +1,21 @@
 <div class="right"
-     *ngIf="selectedChat && selectedChat?.chatId === selectedChatId && currentUser">
+     *ngIf="selectedChat && selectedChat?.chatId === selectedChatId && currentUser"
+     [ngClass]="callFromSinglePage ? 'single-page-chat' : ''">
   <div class="top d-flex flex-row">
-            <div class="pe-2" *ngIf="innerWidth <= 700" [routerLink]="['/chat']">
-              <mat-icon>arrow_back</mat-icon>
-            </div>
-            <span>To:
+    <div class="pe-2" *ngIf="innerWidth <= 700 || callFromSinglePage" [routerLink]="['/chat']">
+      <mat-icon>arrow_back</mat-icon>
+    </div>
+    <span>To:
               <span class="name">
                    {{selectedChat.receiverFirstName + ' ' + selectedChat.receiverLastName}}
                </span>
             </span>
   </div>
-  <div class="h-100">
-    <div class="chat h-100 my-2" #endOfUserChat
+  <div class="h-100 d-flex flex-column">
+    <div class="chat my-2" #endOfUserChat
          *ngIf="messages && messages.length > 0"
          data-chat="person1"
          infiniteScroll
-         style="height: 100%"
          [scrollWindow]="false"
          [infiniteScrollDistance]="2"
          [infiniteScrollUpDistance]="2"
@@ -73,7 +73,6 @@
       <div class="text-center">Loading Chat ...</div>
     </div>
     <div class="message-form" *ngIf="messageForm">
-      <!--<a href="javascript:;" class="write-link attach"></a>-->
       <form (ngSubmit)="sendToMessage()" [formGroup]="messageForm">
         <div class="d-flex flex-row mt-2">
           <div class="d-flex flex-column flex-fill">
@@ -88,16 +87,15 @@
                    formControlName="message"
                    (keydown.enter)="sendToMessage()"/>
           </div>
-          <button class="ms-2 btn btn-primary"
-                  [disabled]="messageForm.invalid"
-                  (click)="sendToMessage()">
-            <mat-icon>send</mat-icon>
-          </button>
+          <div class="d-flex align-items-center">
+            <button mat-mini-fab class="ms-2" color="accent"
+                    [disabled]="messageForm.invalid"
+                    (click)="sendToMessage()">
+              <mat-icon>send</mat-icon>
+            </button>
+          </div>
         </div>
       </form>
-      <!--<a href="javascript:;" class="write-link smiley"></a>
-      <a href="javascript:;" class="write-link send"></a>-->
     </div>
   </div>
 </div>
-

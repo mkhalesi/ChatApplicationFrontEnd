@@ -1,3 +1,9 @@
-<div *ngIf="currentUser && selectedChatId !== 0" style="height: 100%">
-  <app-chat-user-detail [selectedChatId]="selectedChatId"></app-chat-user-detail>
+
+
+<div *ngIf="currentUser && selectedChatId !== 0"
+     class="parent-single-chat">
+  <div class="single-chat">
+    <app-chat-user-detail [selectedChatId]="selectedChatId" [callFromSinglePage]="true"></app-chat-user-detail>
+  </div>
+
 </div>

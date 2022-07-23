@@ -36,6 +36,7 @@ export class ChatUserDetailComponent implements OnInit, OnDestroy, AfterViewInit
   @ViewChild('endOfUserChat') private userChatListContainer: ElementRef | undefined;
 
   @Input() selectedChatId: number = 0;
+  @Input() callFromSinglePage = false;
   chatLoading = true;
   chatMessageLoading = false;
   currentUser: CurrentUser | null = null;

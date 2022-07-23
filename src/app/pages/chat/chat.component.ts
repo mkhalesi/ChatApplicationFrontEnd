@@ -4,7 +4,7 @@ import {
   ElementRef, HostListener, Inject,
   NgZone,
   OnDestroy,
-  OnInit,  PLATFORM_ID,
+  OnInit, PLATFORM_ID,
   ViewChild
 } from '@angular/core';
 import {MessageDTO} from "../../DTOs/chat/MessageDTO";
@@ -18,7 +18,6 @@ import {ChatDTO} from "../../DTOs/chat/ChatDTO";
 import {CookieService} from "ngx-cookie-service";
 import {ChatAppCookieName} from "../../utilities/PathTools";
 import {isPlatformBrowser} from "@angular/common";
-import {GlobalEventManager} from "../../utilities/GlobalEventManager";
 
 declare function chatScriptFunction(): any;
 
@@ -47,7 +46,6 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewInit {
     private cookieService: CookieService,
     private elRef: ElementRef,
     @Inject(PLATFORM_ID) private platformId: any,
-    private eventManager: GlobalEventManager
   ) {
   }
 
@@ -121,10 +119,9 @@ export class ChatComponent implements OnInit, OnDestroy, AfterViewInit {
   onResize(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.innerWidth = window.innerWidth;
-      if (this.innerWidth < 1000) {
+      if (this.innerWidth < 700) {
+        this.selectedChatId = 0;
       }
     }
   }
-
-
 }
