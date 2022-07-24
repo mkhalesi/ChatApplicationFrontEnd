@@ -263,7 +263,7 @@ export class ChatUserDetailComponent implements OnInit, OnDestroy, AfterViewInit
     this.senderMessagesReadTimeUpdateSubscription?.unsubscribe();
     this.destroyed?.next();
     this.destroyed?.complete();
-    this.chatService.stopSignalR();
+    /*this.chatService.stopSignalR();*/
   }
 
   @HostListener('window:resize', ['$event'])

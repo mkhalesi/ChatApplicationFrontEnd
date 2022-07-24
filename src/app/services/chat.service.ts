@@ -22,8 +22,7 @@ export class ChatService {
   messageReceived = new Subject<MessageDTO>();
   senderMessagesReadTimeUpdated = new Subject<boolean>();
   connectionEstablished = new EventEmitter<Boolean>();
-  // @ts-ignore
-  private _hubConnection: HubConnection;
+  private _hubConnection: HubConnection | null = null;
 
   constructor(
     private http: HttpClient,
@@ -50,7 +49,7 @@ export class ChatService {
   }
 
   private startConnection(): void {
-    this._hubConnection.start()
+    this._hubConnection?.start()
       .then(() => {
         this.connectionEstablished.emit(true);
         console.log('Hub Connection started');
@@ -61,17 +60,17 @@ export class ChatService {
   }
 
   private registerOnServerEvents(): void {
-    this._hubConnection.on(ChatMethodName, (data) => {
+    this._hubConnection?.on(ChatMethodName, (data) => {
       this.messageReceived.next(data);
     });
-    this._hubConnection.on(UpdateSenderMessagesReadTime, (data) => {
+    this._hubConnection?.on(UpdateSenderMessagesReadTime, (data) => {
       this.senderMessagesReadTimeUpdated.next(data);
     });
   }
 
   sendMessage(message: MessageDTO): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      this._hubConnection.invoke(invokeSendMessageName, message)
+      this._hubConnection?.invoke(invokeSendMessageName, message)
         .catch(err => console.error(err));
       resolve();
     });
@@ -105,14 +104,14 @@ export class ChatService {
 
   receiverSeenMessages(chatId: number): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-      this._hubConnection.invoke(invokeReceiverSeenMessage, chatId)
+      this._hubConnection?.invoke(invokeReceiverSeenMessage, chatId)
         .catch(err => console.error(err));
       resolve();
     });
   }
 
   stopSignalR(): void {
-    this._hubConnection.stop().then(r => console.log());
+    this._hubConnection?.stop().then(r => console.log('Hub Connection Closed'));
   }
 
 }

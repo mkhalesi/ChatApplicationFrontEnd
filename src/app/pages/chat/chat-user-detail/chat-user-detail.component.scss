@@ -49,7 +49,7 @@
   }
 
   .chat {
-    height: calc(100vh - 48px);
+    height: 100%;
     position: relative;
     display: block;
     overflow-y: scroll;
@@ -291,20 +291,34 @@
   .message-create-time {
     font-size: 11px;
   }
+
+  .chat-start-message {
+    height: 100%;
+  }
 }
 
 .single-page-chat {
+  .chat {
+    height: calc(100% - 120px);
+  }
+
   .right {
     padding-right: 0 !important;
-    height: 90vh !important;
+    height: 100% !important;
 
     .top {
       padding: 15px 10px !important;
     }
   }
+
+  .chat-start-message {
+    height: calc(100% - 110px) !important;
+  }
+
   .message-form {
     padding: 0 10px !important;
   }
+
   .chat {
     padding: 5px 15px !important;
   }
@@ -313,7 +327,7 @@
 @media screen and (max-width: 700px) {
   .right {
     padding-right: 0 !important;
-    height: 90vh;
+    height: 100%;
 
     .top {
       padding: 15px 10px;
@@ -324,6 +338,9 @@
   }
   .chat {
     padding: 5px 15px !important;
+  }
+  .chat-start-message {
+    height: calc(100% - 110px) !important;
   }
 }
 

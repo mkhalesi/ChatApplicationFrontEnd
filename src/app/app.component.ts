@@ -92,7 +92,6 @@ export class AppComponent implements OnInit, OnDestroy {
     this.messageReceiveSubscription?.unsubscribe();
     this.destroyed?.next();
     this.destroyed?.complete();
-    this.chatService.stopSignalR();
   }
 
 }
